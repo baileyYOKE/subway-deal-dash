@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to campaigns collection for the Deal Dash app
+    match /campaigns/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
