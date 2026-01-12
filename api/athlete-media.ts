@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-// Brand deal ID for Subway Deal #1 (the one matching carousel athletes)
+// Brand deal ID for "IG Story" campaign (Deal #1 - matches carousel athletes)
+// Note: "Complete Partnership" campaign (Deal #2: 6940ab2db1b5bacae82de3d8) has different athletes
 const BRAND_DEAL_ID = '694830dca630d563ba4c77c1';
 
 // S3 bucket to CloudFront domain mapping
