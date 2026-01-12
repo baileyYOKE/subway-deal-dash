@@ -614,6 +614,15 @@ const App: React.FC = () => {
               onLowPriorityImport={handleLowPriorityImport}
               onTikTokRefresh={handleTikTokRefresh}
               onInstagramVerify={handleInstagramVerify}
+              onProfileImageMigration={async () => {
+                const { applyProfileImages } = await import('./services/profileImageMigration');
+                const result = applyProfileImages(data);
+                // Update local data with migrated images
+                setData(result.athletes);
+                // Trigger cloud save with updated data
+                await saveDataToCloudNow(result.athletes);
+                return { matched: result.matched, notFound: result.notFound };
+              }}
               isRefreshing={isRefreshing}
               isVerifyingIG={isVerifyingIG}
             />

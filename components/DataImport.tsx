@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Upload, RefreshCw, Film, FileWarning } from 'lucide-react';
+import { Upload, RefreshCw, Film, FileWarning, Image } from 'lucide-react';
 
 interface Props {
   onImport: (file: File) => void;
   onLowPriorityImport: (file: File) => void;
   onTikTokRefresh: () => void;
   onInstagramVerify: () => void;
+  onProfileImageMigration: () => Promise<{ matched: number; notFound: string[] }>;
   isRefreshing: boolean;
   isVerifyingIG: boolean;
 }
@@ -15,10 +16,13 @@ export const DataImport: React.FC<Props> = ({
   onLowPriorityImport,
   onTikTokRefresh,
   onInstagramVerify,
+  onProfileImageMigration,
   isRefreshing,
   isVerifyingIG
 }) => {
   const [dragActive, setDragActive] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<{ matched: number; notFound: string[] } | null>(null);
   const lowPriorityInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -52,6 +56,17 @@ export const DataImport: React.FC<Props> = ({
     if (e.target.files && e.target.files[0]) {
       onLowPriorityImport(e.target.files[0]);
     }
+  };
+
+  const handleMigration = async () => {
+    setIsMigrating(true);
+    try {
+      const result = await onProfileImageMigration();
+      setMigrationResult(result);
+    } catch (error) {
+      console.error('Migration error:', error);
+    }
+    setIsMigrating(false);
   };
 
   return (
@@ -120,6 +135,30 @@ export const DataImport: React.FC<Props> = ({
           </button>
         </div>
 
+      </div>
+
+      {/* Profile Image Migration */}
+      <div className="bg-subway-green/10 p-4 rounded-xl border border-subway-green/30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-subway-green rounded-lg">
+            <Image className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700">Migrate Profile Images</h4>
+            <p className="text-xs text-gray-500">
+              {migrationResult
+                ? `✅ ${migrationResult.matched} athletes updated`
+                : 'Import 165 image URLs from roster CSV'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleMigration}
+          disabled={isMigrating}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${isMigrating ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-subway-green text-white hover:brightness-105'}`}
+        >
+          {isMigrating ? 'Migrating...' : 'Run Migration'}
+        </button>
       </div>
 
       {/* Low Priority Section */}

@@ -3,6 +3,7 @@ import { Athlete } from '../types';
 import { loadDataFromCloud, loadShowcaseData, loadScrapedComments, TopContent, FeaturedComment, ScrapedCommentsStore } from '../services/dataService';
 import { generateWordCloudData, WordCloudItem } from '../services/commentsService';
 import { AthleteListItem, loadAthleteList, createAthleteLookup } from '../services/mediaService';
+import { isBaselineAthlete } from '../services/baselineAthletes';
 import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart, BarChart3, Sparkles, Zap, Star } from 'lucide-react';
 import { WordCloud } from './WordCloud';
 import { AthleteCarousel, AthleteImage, parseAthleteImageCSV, athletesToCarouselImages } from './AthleteCarousel';
@@ -18,11 +19,12 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
     // Featured Athletes = those with TikTok OR IG Reel (they do video + story)
     const featuredAthletes = realAthletes.filter(a => (a.tiktok_views || 0) > 0 || (a.ig_reel_views || 0) > 0);
 
-    // Sub Club Athletes = those with ONLY story (no video)
+    // Sub Club Athletes = those with ONLY story (no video) AND in baseline CSV
     const subClubAthletes = realAthletes.filter(a =>
         (a.tiktok_views || 0) === 0 &&
         (a.ig_reel_views || 0) === 0 &&
-        (a.ig_story_1_views || 0) > 0
+        (a.ig_story_1_views || 0) > 0 &&
+        isBaselineAthlete(a.user_name)  // Only include athletes from baseline CSV
     );
 
     // Featured Athletes stats by platform

@@ -109,6 +109,7 @@ export const DataTable: React.FC<Props> = ({ data, onUpdate }) => {
     { label: 'IG Acct', key: 'ig_account', width: 'w-32' },
     { label: 'TikTok Acct', key: 'tiktok_account', width: 'w-32' },
     { label: 'Assigned To', key: 'assigned_to', width: 'w-32' },
+    { label: 'Profile Image', key: 'profile_image_url', width: 'w-32', type: 'image' },
     // URLs
     { label: 'IG Reel URL', key: 'ig_reel_url', width: 'w-48' },
     { label: 'TikTok Post URL', key: 'tiktok_post_url', width: 'w-48' },
@@ -258,6 +259,34 @@ export const DataTable: React.FC<Props> = ({ data, onUpdate }) => {
                       return (
                         <td key={i} className="p-3 border-r border-gray-100 bg-gray-50 text-gray-500 font-mono">
                           {displayVal}
+                        </td>
+                      );
+                    }
+
+                    // Image column - show thumbnail + editable URL
+                    if (h.type === 'image') {
+                      const imageUrl = row[h.key as keyof Athlete] as string;
+                      return (
+                        <td key={i} className="p-2 border-r border-gray-100">
+                          <div className="flex items-center gap-2">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt=""
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
+                            )}
+                            <input
+                              type="text"
+                              value={imageUrl || ''}
+                              placeholder="Image URL"
+                              onChange={(e) => handleCellChange(row.id, h.key as keyof Athlete, e.target.value)}
+                              className="w-full text-xs p-1 border border-gray-200 rounded focus:ring-2 focus:ring-subway-green"
+                            />
+                          </div>
                         </td>
                       );
                     }
