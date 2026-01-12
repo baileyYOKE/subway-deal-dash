@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-// Brand deal ID for Subway Deal #2
-const BRAND_DEAL_ID = '6940ab2db1b5bacae82de3d8';
+// Brand deal ID for Subway Deal #1 (the one matching carousel athletes)
+const BRAND_DEAL_ID = '694830dca630d563ba4c77c1';
 
 // S3 bucket to CloudFront domain mapping
 const S3_TO_CLOUDFRONT: Record<string, string> = {
