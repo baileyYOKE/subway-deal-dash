@@ -12,7 +12,8 @@ export interface AthleteImage {
 
 interface Props {
     athletes: AthleteImage[];
-    onAthleteClick?: (athlete: Athlete) => void;
+    onAthleteClick?: (athleteImage: AthleteImage) => void;
+    paused?: boolean;
 }
 
 // Single row of the carousel - uses CSS animation for seamless infinite loop
@@ -20,8 +21,9 @@ const CarouselRow: React.FC<{
     athletes: AthleteImage[];
     direction: 'left' | 'right';
     duration?: number;
-    onAthleteClick?: (athlete: Athlete) => void;
-}> = ({ athletes, direction, duration = 60, onAthleteClick }) => {
+    onAthleteClick?: (athleteImage: AthleteImage) => void;
+    paused?: boolean;
+}> = ({ athletes, direction, duration = 60, onAthleteClick, paused = false }) => {
     // Duplicate athletes once - when first half scrolls out, second half continues seamlessly
     const displayAthletes = [...athletes, ...athletes];
 
@@ -31,6 +33,7 @@ const CarouselRow: React.FC<{
                 className="flex gap-3"
                 style={{
                     animation: `scroll-${direction} ${duration}s linear infinite`,
+                    animationPlayState: paused ? 'paused' : 'running',
                     width: 'fit-content'
                 }}
             >
@@ -38,7 +41,7 @@ const CarouselRow: React.FC<{
                     <div
                         key={`${athlete.firstName}-${athlete.lastName}-${idx}`}
                         className="flex-shrink-0 group relative cursor-pointer"
-                        onClick={() => athlete.athlete && onAthleteClick?.(athlete.athlete)}
+                        onClick={() => onAthleteClick?.(athlete)}
                     >
                         <div className="w-24 h-24 rounded-full overflow-hidden border-3 border-subway-green/40 hover:border-subway-green shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white">
                             <img
@@ -77,7 +80,12 @@ const CarouselRow: React.FC<{
     );
 };
 
-export const AthleteCarousel: React.FC<Props> = ({ athletes, onAthleteClick }) => {
+export const AthleteCarousel: React.FC<Props> = ({ athletes, onAthleteClick, paused = false }) => {
+    // Debug: log paused state changes
+    React.useEffect(() => {
+        console.log('[AthleteCarousel] paused state:', paused);
+    }, [paused]);
+
     if (athletes.length === 0) return null;
 
     // Each row gets the same full list of athletes - CSS animation handles the loop
@@ -89,9 +97,9 @@ export const AthleteCarousel: React.FC<Props> = ({ athletes, onAthleteClick }) =
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
 
             {/* Three rows - each has all athletes, different speeds/directions */}
-            <CarouselRow athletes={athletes} direction="left" duration={200} onAthleteClick={onAthleteClick} />
-            <CarouselRow athletes={athletes} direction="right" duration={220} onAthleteClick={onAthleteClick} />
-            <CarouselRow athletes={athletes} direction="left" duration={240} onAthleteClick={onAthleteClick} />
+            <CarouselRow athletes={athletes} direction="left" duration={200} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={athletes} direction="right" duration={220} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={athletes} direction="left" duration={240} onAthleteClick={onAthleteClick} paused={paused} />
         </div>
     );
 };

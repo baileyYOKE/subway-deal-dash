@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Athlete } from '../types';
 import { loadDataFromCloud, loadShowcaseData, loadScrapedComments, TopContent, FeaturedComment, ScrapedCommentsStore } from '../services/dataService';
 import { generateWordCloudData, WordCloudItem } from '../services/commentsService';
+import { AthleteListItem, loadAthleteList, createAthleteLookup } from '../services/mediaService';
 import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart, BarChart3, Sparkles, Zap, Star } from 'lucide-react';
 import { WordCloud } from './WordCloud';
 import { AthleteCarousel, AthleteImage, parseAthleteImageCSV, athletesToCarouselImages } from './AthleteCarousel';
 import { AthleteDetailModal } from './AthleteDetailModal';
+import { AthleteMediaModal } from './AthleteMediaModal';
 
 const PUBLIC_PASSCODE = 'subway';
 
@@ -222,6 +224,8 @@ export const PublicShowcase: React.FC = () => {
     const [athleteImages, setAthleteImages] = useState<AthleteImage[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
+    const [athleteMediaList, setAthleteMediaList] = useState<AthleteListItem[]>([]);
+    const [selectedMediaAthlete, setSelectedMediaAthlete] = useState<AthleteListItem | null>(null);
 
     useEffect(() => {
         const authStatus = localStorage.getItem('subway_public_auth');
@@ -234,13 +238,15 @@ export const PublicShowcase: React.FC = () => {
                 loadDataFromCloud(),
                 loadShowcaseData(),
                 loadScrapedComments(),
-                fetch('/subway_deal_with_images.csv').then(r => r.text()).catch(() => '')
-            ]).then(([athleteResult, showcaseResult, scrapedResult, csvText]) => {
+                fetch('/subway_deal_with_images.csv').then(r => r.text()).catch(() => ''),
+                loadAthleteList()
+            ]).then(([athleteResult, showcaseResult, scrapedResult, csvText, mediaList]) => {
                 if (athleteResult.athletes) setData(athleteResult.athletes);
                 setTopContent(showcaseResult.topContent);
                 setFeaturedComments(showcaseResult.featuredComments);
                 setScrapedData(scrapedResult);
                 if (csvText) setAthleteImages(parseAthleteImageCSV(csvText));
+                setAthleteMediaList(mediaList);
                 setLoading(false);
             });
         }
@@ -258,6 +264,38 @@ export const PublicShowcase: React.FC = () => {
 
     const stats = calculateDetailedStats(data);
     const allComments = featuredComments;
+
+    // Create lookup map for athlete media by name
+    const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
+
+    // Handle athlete click - show media modal if available, otherwise detail modal
+    const handleAthleteClick = (athleteImage: AthleteImage) => {
+        console.log('[PublicShowcase] Athlete clicked:', athleteImage.firstName, athleteImage.lastName);
+        const nameKey = `${athleteImage.firstName}-${athleteImage.lastName}`.toLowerCase();
+        const mediaAthlete = athleteMediaLookup.get(nameKey);
+        console.log('[PublicShowcase] Media athlete found:', !!mediaAthlete);
+
+        if (mediaAthlete && mediaAthlete.media.length > 0) {
+            console.log('[PublicShowcase] Opening media modal with API data');
+            setSelectedMediaAthlete(mediaAthlete);
+        } else if (athleteImage.athlete) {
+            console.log('[PublicShowcase] Opening detail modal');
+            setSelectedAthlete(athleteImage.athlete);
+        } else {
+            console.log('[PublicShowcase] Opening media modal with fallback data');
+            // Fallback: Create a temporary AthleteListItem for testing
+            // This allows viewing the modal UI even without the API
+            const tempAthlete: AthleteListItem = {
+                firstName: athleteImage.firstName,
+                lastName: athleteImage.lastName,
+                sport: athleteImage.sport,
+                campaign: '',
+                school: athleteImage.schoolName,
+                media: []
+            };
+            setSelectedMediaAthlete(tempAthlete);
+        }
+    };
 
     const wordCloudData = useMemo(() => {
         if (!scrapedData) return [];
@@ -515,10 +553,14 @@ export const PublicShowcase: React.FC = () => {
                             <h2 className="text-4xl font-black text-gray-900">The Athlete Army</h2>
                         </div>
                         <p className="text-gray-500 text-center text-lg">
-                            Click any athlete to see their campaign metrics
+                            Click any athlete to view their campaign content
                         </p>
                     </div>
-                    <AthleteCarousel athletes={athleteImages} onAthleteClick={setSelectedAthlete} />
+                    <AthleteCarousel
+                        athletes={athleteImages}
+                        onAthleteClick={handleAthleteClick}
+                        paused={selectedMediaAthlete !== null || selectedAthlete !== null}
+                    />
                 </section>
             )}
 
@@ -600,6 +642,14 @@ export const PublicShowcase: React.FC = () => {
                 <AthleteDetailModal
                     athlete={selectedAthlete}
                     onClose={() => setSelectedAthlete(null)}
+                />
+            )}
+
+            {/* Athlete Media Modal */}
+            {selectedMediaAthlete && (
+                <AthleteMediaModal
+                    athlete={selectedMediaAthlete}
+                    onClose={() => setSelectedMediaAthlete(null)}
                 />
             )}
         </div>
