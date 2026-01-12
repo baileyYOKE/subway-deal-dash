@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, RefreshCw, Film, FileWarning, Image } from 'lucide-react';
+import { Upload, RefreshCw, Film, FileWarning, Image, Download, Trash2, Shield } from 'lucide-react';
 
 interface Props {
   onImport: (file: File) => void;
@@ -7,6 +7,8 @@ interface Props {
   onTikTokRefresh: () => void;
   onInstagramVerify: () => void;
   onProfileImageMigration: () => Promise<{ matched: number; notFound: string[] }>;
+  onBackupContacts: () => void;
+  onPurgeNonBaseline: () => Promise<{ removed: number; kept: number }>;
   isRefreshing: boolean;
   isVerifyingIG: boolean;
 }
@@ -17,12 +19,16 @@ export const DataImport: React.FC<Props> = ({
   onTikTokRefresh,
   onInstagramVerify,
   onProfileImageMigration,
+  onBackupContacts,
+  onPurgeNonBaseline,
   isRefreshing,
   isVerifyingIG
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState<{ matched: number; notFound: string[] } | null>(null);
+  const [isPurging, setIsPurging] = useState(false);
+  const [purgeResult, setPurgeResult] = useState<{ removed: number; kept: number } | null>(null);
   const lowPriorityInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -67,6 +73,20 @@ export const DataImport: React.FC<Props> = ({
       console.error('Migration error:', error);
     }
     setIsMigrating(false);
+  };
+
+  const handlePurge = async () => {
+    if (!confirm('⚠️ This will PERMANENTLY DELETE all athletes not in the baseline CSV. Are you sure? Make sure you have downloaded the backup first!')) {
+      return;
+    }
+    setIsPurging(true);
+    try {
+      const result = await onPurgeNonBaseline();
+      setPurgeResult(result);
+    } catch (error) {
+      console.error('Purge error:', error);
+    }
+    setIsPurging(false);
   };
 
   return (
@@ -183,6 +203,59 @@ export const DataImport: React.FC<Props> = ({
               onChange={handleLowPriorityChange}
             />
           </label>
+        </div>
+      </div>
+
+      {/* Roster Management Section */}
+      <div className="border-t border-red-200 pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="w-5 h-5 text-red-600" />
+          <h3 className="text-lg font-bold text-gray-900">Roster Management</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Backup Contacts */}
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <Download className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700">Backup Contacts</h4>
+                <p className="text-xs text-gray-500">Download names, phones, IG/TikTok links</p>
+              </div>
+            </div>
+            <button
+              onClick={onBackupContacts}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 transition"
+            >
+              Download CSV
+            </button>
+          </div>
+
+          {/* Purge Non-Baseline */}
+          <div className="bg-red-50 p-4 rounded-xl border border-red-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500 rounded-lg">
+                <Trash2 className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700">Purge Non-Baseline Athletes</h4>
+                <p className="text-xs text-gray-500">
+                  {purgeResult
+                    ? `✅ Removed ${purgeResult.removed}, kept ${purgeResult.kept}`
+                    : 'Delete athletes not in baseline CSV'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handlePurge}
+              disabled={isPurging}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${isPurging ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
+            >
+              {isPurging ? 'Purging...' : '⚠️ Delete'}
+            </button>
+          </div>
         </div>
       </div>
 

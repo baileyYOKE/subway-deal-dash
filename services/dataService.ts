@@ -20,6 +20,10 @@ const TOTAL_ATHLETES = VIDEO_ATHLETES + STORY_ATHLETES;
 const VIDEO_SLUG = 'Subway - Complete your partnership';
 const STORY_SLUG = 'Subway - Earn $25 through a partnership with Subway';
 
+// ROSTER LOCK: When true, imports will ONLY update existing athletes, never create new ones
+// Set this to true after purging non-baseline athletes to lock the roster
+export const ROSTER_LOCKED = true;
+
 // Helper to generate a unique ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -597,7 +601,12 @@ export const processCSVImport = (file: File, currentData: Athlete[]): Promise<At
             }
 
             // If still no match, CREATE a new athlete with correct campaign type
+            // UNLESS roster is locked - then skip this row
             if (matchIndex === -1) {
+              if (ROSTER_LOCKED) {
+                console.log(`🔒 ROSTER LOCKED - Skipping new athlete:`, name);
+                return; // Skip this row - don't create new athletes
+              }
               const newAthlete: Athlete = {
                 id: Math.random().toString(36).substr(2, 9),
                 user_name: name || 'Unknown',
@@ -797,8 +806,12 @@ export const processCSVImport = (file: File, currentData: Athlete[]): Promise<At
               );
             }
 
-            // If still no slot, create new athlete
+            // If still no slot, create new athlete (unless roster is locked)
             if (matchIndex === -1) {
+              if (ROSTER_LOCKED) {
+                console.log(`🔒 ROSTER LOCKED - Skipping new athlete:`, name);
+                return; // Skip this row - don't create new athletes
+              }
               const newAthlete: Athlete = {
                 id: Math.random().toString(36).substr(2, 9),
                 user_name: name || 'Unknown',

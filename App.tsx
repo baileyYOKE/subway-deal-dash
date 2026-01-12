@@ -623,6 +623,29 @@ const App: React.FC = () => {
                 await saveDataToCloudNow(result.athletes);
                 return { matched: result.matched, notFound: result.notFound };
               }}
+              onBackupContacts={() => {
+                const { generateContactBackupCSV } = require('./services/athleteRosterService');
+                const csv = generateContactBackupCSV(data);
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `athlete_contacts_backup_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              onPurgeNonBaseline={async () => {
+                const { filterToBaselineAthletes } = await import('./services/athleteRosterService');
+                const { kept, removed } = filterToBaselineAthletes(data);
+                setData(kept);
+                // Save to cloud immediately
+                await saveDataToCloudNow(kept, {
+                  failedTikTokUrls,
+                  failedInstagramUrls,
+                  dismissedAlerts
+                }, 'purge-non-baseline');
+                return { removed: removed.length, kept: kept.length };
+              }}
               isRefreshing={isRefreshing}
               isVerifyingIG={isVerifyingIG}
             />
