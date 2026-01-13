@@ -8,6 +8,7 @@ export interface AthleteImage {
     sport: string;
     imageUrl: string;
     athlete?: Athlete; // Original athlete data for click handler
+    hasMedia?: boolean; // True if athlete has S3 media files
 }
 
 interface Props {
@@ -43,7 +44,11 @@ const CarouselRow: React.FC<{
                         className="flex-shrink-0 group relative cursor-pointer"
                         onClick={() => onAthleteClick?.(athlete)}
                     >
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-3 border-subway-green/40 hover:border-subway-green shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white">
+                        {/* Green glow ring for athletes with media */}
+                        <div className={`w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white ${athlete.hasMedia
+                                ? 'ring-4 ring-green-500 ring-offset-2 ring-offset-white shadow-green-500/50 shadow-lg'
+                                : 'border-3 border-subway-green/40 hover:border-subway-green'
+                            }`}>
                             <img
                                 src={athlete.imageUrl}
                                 alt={`${athlete.firstName} ${athlete.lastName}`}
@@ -55,9 +60,11 @@ const CarouselRow: React.FC<{
                             />
                         </div>
 
-                        {/* Tooltip on hover */}
+                        {/* Tooltip on hover - shows media badge if they have media */}
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                            <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                            <div className={`text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg flex items-center gap-1 ${athlete.hasMedia ? 'bg-green-600' : 'bg-gray-900'
+                                }`}>
+                                {athlete.hasMedia && <span>🎬</span>}
                                 {athlete.firstName} {athlete.lastName}
                             </div>
                         </div>

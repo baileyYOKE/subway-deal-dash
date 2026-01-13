@@ -305,6 +305,18 @@ export const PublicShowcase: React.FC = () => {
         return generateWordCloudData(allComments);
     }, [scrapedData]);
 
+    // Enrich athlete images with hasMedia flag for green ring indicator
+    const enrichedAthleteImages = useMemo(() => {
+        return athleteImages.map(img => {
+            const nameKey = `${img.firstName}-${img.lastName}`.toLowerCase();
+            const mediaAthlete = athleteMediaLookup.get(nameKey);
+            return {
+                ...img,
+                hasMedia: mediaAthlete && mediaAthlete.media.length > 0
+            };
+        });
+    }, [athleteImages, athleteMediaLookup]);
+
     // Login screen - Light and welcoming
     if (!isAuthenticated) {
         return (
@@ -545,7 +557,7 @@ export const PublicShowcase: React.FC = () => {
             </section>
 
             {/* Athlete Army Carousel */}
-            {athleteImages.length > 0 && (
+            {enrichedAthleteImages.length > 0 && (
                 <section className="py-16 relative">
                     <div className="max-w-7xl mx-auto px-4 mb-8">
                         <div className="flex items-center justify-center gap-3 mb-3">
@@ -557,9 +569,13 @@ export const PublicShowcase: React.FC = () => {
                         <p className="text-gray-500 text-center text-lg">
                             Click any athlete to view their campaign content
                         </p>
+                        <p className="text-center text-sm mt-2 text-green-600 flex items-center justify-center gap-2">
+                            <span className="w-4 h-4 rounded-full ring-2 ring-green-500 ring-offset-1 bg-gray-200"></span>
+                            Green ring = has video/media
+                        </p>
                     </div>
                     <AthleteCarousel
-                        athletes={athleteImages}
+                        athletes={enrichedAthleteImages}
                         onAthleteClick={handleAthleteClick}
                         paused={selectedMediaAthlete !== null || selectedAthlete !== null}
                     />
