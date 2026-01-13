@@ -13,6 +13,9 @@ import { ShowcaseAdmin } from './components/ShowcaseAdmin';
 import { ChangeNotification, StatChange, calculateCampaignStats, calculateStatChanges } from './components/ChangeNotification';
 import { Lock, LayoutDashboard, Table as TableIcon, Database, LogOut, Cloud, CloudOff, AlertCircle, AlertTriangle, Save, RefreshCw, History, Sparkles } from 'lucide-react';
 
+// App version - increment on each deploy for easy tracking
+const APP_VERSION = '1.0.1';
+
 const PASSCODE = 'nil';
 
 enum Tab {
@@ -661,6 +664,13 @@ const App: React.FC = () => {
           onClose={() => setChangeNotification(null)}
         />
       )}
+
+      {/* Footer with Version */}
+      <footer className="bg-gray-100 border-t border-gray-200 py-3 px-4 text-center">
+        <span className="text-xs text-gray-400">
+          Subway Deal #2 Dash • Version <span className="font-mono font-bold text-gray-500">{APP_VERSION}</span>
+        </span>
+      </footer>
     </div>
   );
 };
