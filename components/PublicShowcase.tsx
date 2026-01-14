@@ -268,9 +268,18 @@ export const PublicShowcase: React.FC = () => {
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
 
-    // Handle athlete click - show media modal if available, otherwise detail modal
+    // Handle athlete click - video athletes open IG Reel, story athletes show modal
     const handleAthleteClick = (athleteImage: AthleteImage) => {
         console.log('[PublicShowcase] Athlete clicked:', athleteImage.firstName, athleteImage.lastName);
+
+        // Video athletes: open their Instagram Reel directly
+        if (athleteImage.isVideoAthlete && athleteImage.igReelUrl) {
+            console.log('[PublicShowcase] Opening Instagram Reel:', athleteImage.igReelUrl);
+            window.open(athleteImage.igReelUrl, '_blank');
+            return;
+        }
+
+        // Story athletes: show media modal or detail modal
         const nameKey = `${athleteImage.firstName}-${athleteImage.lastName}`.toLowerCase();
         const mediaAthlete = athleteMediaLookup.get(nameKey);
         console.log('[PublicShowcase] Media athlete found:', !!mediaAthlete);
@@ -282,9 +291,7 @@ export const PublicShowcase: React.FC = () => {
             console.log('[PublicShowcase] Opening detail modal');
             setSelectedAthlete(athleteImage.athlete);
         } else {
-            console.log('[PublicShowcase] Opening media modal with fallback data');
-            // Fallback: Create a temporary AthleteListItem for testing
-            // This allows viewing the modal UI even without the API
+            console.log('[PublicShowcase] Opening fallback modal');
             const tempAthlete: AthleteListItem = {
                 firstName: athleteImage.firstName,
                 lastName: athleteImage.lastName,
@@ -298,16 +305,53 @@ export const PublicShowcase: React.FC = () => {
     };
 
 
-    // Enrich athlete images with hasMedia flag for green ring indicator
+    // Enrich athlete images with hasMedia, isVideoAthlete flags and interleave
     const enrichedAthleteImages = useMemo(() => {
-        return athleteImages.map(img => {
+        // Separate video and story athletes
+        const videoImages: typeof athleteImages = [];
+        const storyImages: typeof athleteImages = [];
+
+        for (const img of athleteImages) {
+            const athlete = img.athlete;
+            const isVideo = athlete?.campaign_type === 'video';
             const nameKey = `${img.firstName}-${img.lastName}`.toLowerCase();
             const mediaAthlete = athleteMediaLookup.get(nameKey);
-            return {
+
+            const enriched = {
                 ...img,
-                hasMedia: mediaAthlete && mediaAthlete.media.length > 0
+                hasMedia: mediaAthlete && mediaAthlete.media.length > 0,
+                isVideoAthlete: isVideo,
+                igReelUrl: athlete?.ig_reel_url || ''
             };
-        });
+
+            if (isVideo) {
+                videoImages.push(enriched);
+            } else {
+                storyImages.push(enriched);
+            }
+        }
+
+        // Interleave: spread video athletes throughout story athletes
+        // Roughly 1 video every 4 story athletes
+        const result: typeof athleteImages = [];
+        const ratio = storyImages.length > 0 ? Math.floor(storyImages.length / Math.max(videoImages.length, 1)) : 1;
+
+        let videoIdx = 0;
+        for (let i = 0; i < storyImages.length; i++) {
+            result.push(storyImages[i]);
+            // Insert a video athlete every 'ratio' story athletes
+            if ((i + 1) % ratio === 0 && videoIdx < videoImages.length) {
+                result.push(videoImages[videoIdx]);
+                videoIdx++;
+            }
+        }
+        // Add remaining video athletes at the end
+        while (videoIdx < videoImages.length) {
+            result.push(videoImages[videoIdx]);
+            videoIdx++;
+        }
+
+        return result;
     }, [athleteImages, athleteMediaLookup]);
 
     // Login screen - Light and welcoming
@@ -562,10 +606,20 @@ export const PublicShowcase: React.FC = () => {
                         <p className="text-gray-500 text-center text-lg">
                             Click any athlete to view their campaign content
                         </p>
-                        <p className="text-center text-sm mt-2 text-green-600 flex items-center justify-center gap-2">
-                            <span className="w-4 h-4 rounded-full ring-2 ring-green-500 ring-offset-1 bg-gray-200"></span>
-                            Green ring = has video/media
-                        </p>
+                        <div className="flex items-center justify-center gap-6 mt-3 text-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500 p-[2px]">
+                                    <span className="block w-full h-full rounded-full bg-white"></span>
+                                </span>
+                                <span className="text-blue-600">🎬 Video Athletes</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
+                                    <span className="block w-full h-full rounded-full bg-white"></span>
+                                </span>
+                                <span className="text-pink-600">📸 Story Athletes</span>
+                            </div>
+                        </div>
                     </div>
                     <AthleteCarousel
                         athletes={enrichedAthleteImages}

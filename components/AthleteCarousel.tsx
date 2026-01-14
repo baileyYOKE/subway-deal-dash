@@ -9,6 +9,8 @@ export interface AthleteImage {
     imageUrl: string;
     athlete?: Athlete; // Original athlete data for click handler
     hasMedia?: boolean; // True if athlete has S3 media files
+    isVideoAthlete?: boolean; // True if from video campaign (85 athletes)
+    igReelUrl?: string; // Instagram Reel URL for video athletes
 }
 
 interface Props {
@@ -44,27 +46,33 @@ const CarouselRow: React.FC<{
                         className="flex-shrink-0 group relative cursor-pointer"
                         onClick={() => onAthleteClick?.(athlete)}
                     >
-                        {/* Green glow ring for athletes with media */}
-                        <div className={`w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white ${athlete.hasMedia
-                                ? 'ring-4 ring-green-500 ring-offset-2 ring-offset-white shadow-green-500/50 shadow-lg'
-                                : 'border-3 border-subway-green/40 hover:border-subway-green'
-                            }`}>
-                            <img
-                                src={athlete.imageUrl}
-                                alt={`${athlete.firstName} ${athlete.lastName}`}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                            />
+                        {/* Ring colors: Video=blue/teal, Story=Instagram gradient (pink/orange) */}
+                        <div
+                            className={`w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white p-[3px] ${athlete.isVideoAthlete
+                                    ? 'bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500'
+                                    : athlete.hasMedia || athlete.imageUrl
+                                        ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                                        : 'bg-gray-300'
+                                }`}
+                        >
+                            <div className="w-full h-full rounded-full overflow-hidden bg-white">
+                                <img
+                                    src={athlete.imageUrl}
+                                    alt={`${athlete.firstName} ${athlete.lastName}`}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                />
+                            </div>
                         </div>
 
-                        {/* Tooltip on hover - shows media badge if they have media */}
+                        {/* Tooltip on hover */}
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                            <div className={`text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg flex items-center gap-1 ${athlete.hasMedia ? 'bg-green-600' : 'bg-gray-900'
+                            <div className={`text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg flex items-center gap-1 ${athlete.isVideoAthlete ? 'bg-blue-600' : 'bg-pink-600'
                                 }`}>
-                                {athlete.hasMedia && <span>🎬</span>}
+                                {athlete.isVideoAthlete ? <span>🎬</span> : <span>📸</span>}
                                 {athlete.firstName} {athlete.lastName}
                             </div>
                         </div>
