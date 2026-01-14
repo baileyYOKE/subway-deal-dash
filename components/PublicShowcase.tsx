@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Athlete } from '../types';
 import { loadDataFromCloud, loadShowcaseData, loadScrapedComments, TopContent, FeaturedComment, ScrapedCommentsStore } from '../services/dataService';
-import { generateWordCloudData, WordCloudItem } from '../services/commentsService';
 import { AthleteListItem, loadAthleteList, createAthleteLookup } from '../services/mediaService';
 import { isBaselineAthlete } from '../services/baselineAthletes';
 import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart, BarChart3, Sparkles, Zap, Star } from 'lucide-react';
-import { WordCloud } from './WordCloud';
 import { AthleteCarousel, AthleteImage, parseAthleteImageCSV, athletesToCarouselImages } from './AthleteCarousel';
 import { AthleteDetailModal } from './AthleteDetailModal';
 import { AthleteMediaModal } from './AthleteMediaModal';
@@ -299,11 +297,6 @@ export const PublicShowcase: React.FC = () => {
         }
     };
 
-    const wordCloudData = useMemo(() => {
-        if (!scrapedData) return [];
-        const allComments = [...(scrapedData.tiktok || []), ...(scrapedData.instagram || [])];
-        return generateWordCloudData(allComments);
-    }, [scrapedData]);
 
     // Enrich athlete images with hasMedia flag for green ring indicator
     const enrichedAthleteImages = useMemo(() => {
@@ -602,25 +595,7 @@ export const PublicShowcase: React.FC = () => {
                 </section>
             )}
 
-            {/* Word Cloud */}
-            {wordCloudData.length > 0 && (
-                <section className="py-16 px-8 bg-gradient-to-b from-transparent via-subway-green/5 to-transparent">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="text-center mb-8">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-green/10 rounded-full text-subway-green font-bold mb-4">
-                                <MessageCircle className="w-5 h-5" /> Fan Buzz
-                            </div>
-                            <h2 className="text-4xl font-black text-gray-900 mb-3">What Fans Are Saying</h2>
-                            <p className="text-gray-500">
-                                Most mentioned words from {((scrapedData?.tiktok?.length || 0) + (scrapedData?.instagram?.length || 0)).toLocaleString()} comments
-                            </p>
-                        </div>
-                        <div className="bg-white/50 backdrop-blur rounded-3xl p-8 shadow-xl border border-subway-green/10">
-                            <WordCloud words={wordCloudData} height={350} width={800} />
-                        </div>
-                    </div>
-                </section>
-            )}
+
 
             {/* Fan Comments */}
             {allComments.length > 0 && (

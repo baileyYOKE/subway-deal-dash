@@ -14,7 +14,7 @@ import { ChangeNotification, StatChange, calculateCampaignStats, calculateStatCh
 import { Lock, LayoutDashboard, Table as TableIcon, Database, LogOut, Cloud, CloudOff, AlertCircle, AlertTriangle, Save, RefreshCw, History, Sparkles } from 'lucide-react';
 
 // App version - increment on each deploy for easy tracking
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 
 const PASSCODE = 'nil';
 
