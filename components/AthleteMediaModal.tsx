@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
+import { X, ExternalLink, Loader2 } from 'lucide-react';
 import { AthleteListItem, SignedMediaItem, AthleteMediaResponse, getAthleteMedia } from '../services/mediaService';
 
 interface Props {
@@ -30,6 +30,7 @@ const MediaView: React.FC<{ media: SignedMediaItem; isLoading: boolean }> = ({ m
                 src={media.signedVideoUrl}
                 poster={media.signedThumbnailUrl || undefined}
                 controls
+                autoPlay
                 className="w-full max-h-[60vh] rounded-xl object-contain bg-black"
             />
         );
@@ -73,8 +74,74 @@ const MediaTypeLabel: React.FC<{ type?: string }> = ({ type }) => {
     );
 };
 
+/**
+ * Select the best single media item based on priority:
+ * 1. Instagram Reel (full video content)
+ * 2. TikTok video
+ * 3. Instagram Story (fallback)
+ */
+function selectBestMedia(mediaItems: SignedMediaItem[]): SignedMediaItem | null {
+    if (mediaItems.length === 0) return null;
+    if (mediaItems.length === 1) return mediaItems[0];
+
+    // Priority order: ig_reel > tiktok > ig_story
+    const reelMedia = mediaItems.find(m => m.mediaType?.toLowerCase() === 'ig_reel');
+    if (reelMedia) return reelMedia;
+
+    const tiktokMedia = mediaItems.find(m => m.mediaType?.toLowerCase() === 'tiktok');
+    if (tiktokMedia) return tiktokMedia;
+
+    const storyMedia = mediaItems.find(m => m.mediaType?.toLowerCase() === 'ig_story');
+    if (storyMedia) return storyMedia;
+
+    // Default to first if no type matches
+    return mediaItems[0];
+}
+
+/**
+ * Get the appropriate external link based on media type and athlete data
+ */
+function getExternalLink(media: SignedMediaItem | null, athlete: AthleteListItem): { url: string; label: string } | null {
+    if (!media) return null;
+
+    const mediaType = media.mediaType?.toLowerCase();
+
+    // Instagram Reel - use the permalink if available
+    if (mediaType === 'ig_reel' && media.instagramPermalink) {
+        return { url: media.instagramPermalink, label: 'View on Instagram' };
+    }
+
+    // TikTok - check if athlete has TikTok link in their data
+    if (mediaType === 'tiktok') {
+        // Look through all media for a TikTok permalink
+        const tiktokPermalink = athlete.media.find(m =>
+            m.mediaType?.toLowerCase() === 'tiktok' && m.instagramPermalink
+        )?.instagramPermalink;
+        if (tiktokPermalink) {
+            return { url: tiktokPermalink, label: 'View on TikTok' };
+        }
+    }
+
+    // Instagram Story - stories expire, so no external link
+    if (mediaType === 'ig_story') {
+        // Check if the athlete has a TikTok we could link to instead
+        const tiktokMedia = athlete.media.find(m => m.mediaType?.toLowerCase() === 'tiktok');
+        if (tiktokMedia?.instagramPermalink) {
+            return { url: tiktokMedia.instagramPermalink, label: 'View on TikTok' };
+        }
+        // No link for expired stories
+        return null;
+    }
+
+    // Fallback: if there's any permalink, use it
+    if (media.instagramPermalink) {
+        return { url: media.instagramPermalink, label: 'View Post' };
+    }
+
+    return null;
+}
+
 export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
-    const [currentIdx, setCurrentIdx] = useState(0);
     const [mediaData, setMediaData] = useState<AthleteMediaResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -114,30 +181,21 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
         };
     }, [athlete]);
 
-    const mediaItems = mediaData?.media || [];
-    const hasMultiple = mediaItems.length > 1;
-    const currentMedia = mediaItems[currentIdx];
+    // Select the single best media item
+    const bestMedia = selectBestMedia(mediaData?.media || []);
+    const externalLink = getExternalLink(bestMedia, athlete);
 
-    const goNext = () => setCurrentIdx((prev) => (prev + 1) % mediaItems.length);
-    const goPrev = () => setCurrentIdx((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
-
-    // Keyboard navigation
+    // Keyboard navigation (Escape to close)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
-            } else if (e.key === 'ArrowRight' && hasMultiple) {
-                goNext();
-            } else if (e.key === 'ArrowLeft' && hasMultiple) {
-                goPrev();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [hasMultiple, onClose]);
-
-    const mediaCount = athlete.media.length;
+    }, [onClose]);
 
     return (
         <div
@@ -169,16 +227,11 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                                 <p className="text-gray-500">{athlete.school}</p>
                             )}
                             <p className="text-gray-500">{athlete.sport}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                {athlete.campaign && (
-                                    <span className="text-xs px-2 py-0.5 bg-subway-green/10 text-subway-green rounded-full font-medium">
-                                        {athlete.campaign}
-                                    </span>
-                                )}
-                                <span className="text-xs text-gray-400">
-                                    {mediaCount} media item{mediaCount !== 1 ? 's' : ''}
+                            {athlete.campaign && (
+                                <span className="text-xs px-2 py-0.5 bg-subway-green/10 text-subway-green rounded-full font-medium">
+                                    {athlete.campaign}
                                 </span>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -193,66 +246,25 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                         <Loader2 className="w-8 h-8 animate-spin text-subway-green" />
                         <p className="text-gray-500 text-sm">Loading media...</p>
                     </div>
-                ) : mediaItems.length > 0 ? (
+                ) : bestMedia ? (
                     <div className="p-6">
-                        {/* Media type and navigation */}
-                        <div className="flex items-center justify-between mb-4">
-                            <MediaTypeLabel type={currentMedia?.mediaType} />
-                            {hasMultiple && (
-                                <span className="text-gray-400 text-sm">
-                                    {currentIdx + 1} of {mediaItems.length}
-                                </span>
-                            )}
+                        {/* Media type label */}
+                        <div className="mb-4">
+                            <MediaTypeLabel type={bestMedia.mediaType} />
                         </div>
 
-                        {/* Media viewer */}
-                        <div className="relative">
-                            {hasMultiple && (
-                                <button
-                                    onClick={goPrev}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition"
-                                >
-                                    <ChevronLeft className="w-5 h-5 text-gray-700" />
-                                </button>
-                            )}
+                        {/* Single media viewer */}
+                        <MediaView media={bestMedia} isLoading={false} />
 
-                            {currentMedia && <MediaView media={currentMedia} isLoading={false} />}
-
-                            {hasMultiple && (
-                                <button
-                                    onClick={goNext}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition"
-                                >
-                                    <ChevronRight className="w-5 h-5 text-gray-700" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Dots indicator */}
-                        {hasMultiple && (
-                            <div className="flex justify-center gap-2 mt-4">
-                                {mediaItems.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        className={`w-2 h-2 rounded-full transition-colors ${idx === currentIdx
-                                            ? 'bg-subway-green'
-                                            : 'bg-gray-300 hover:bg-gray-400'
-                                            }`}
-                                        onClick={() => setCurrentIdx(idx)}
-                                    />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Instagram link */}
-                        {currentMedia?.instagramPermalink && (
+                        {/* External link (View on Instagram/TikTok) */}
+                        {externalLink && (
                             <a
-                                href={currentMedia.instagramPermalink}
+                                href={externalLink.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-4 flex items-center justify-center gap-2 text-subway-green hover:text-subway-green/80 font-medium transition"
                             >
-                                View on Instagram <ExternalLink className="w-4 h-4" />
+                                {externalLink.label} <ExternalLink className="w-4 h-4" />
                             </a>
                         )}
                     </div>

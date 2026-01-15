@@ -517,7 +517,7 @@ export const PublicShowcase: React.FC = () => {
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-green/10 rounded-full text-subway-green font-bold mb-3">
                             <Star className="w-5 h-5 fill-subway-green" /> Featured Athletes
                         </div>
-                        <p className="text-gray-500">Video + Story creators • {stats.featured.count} athletes</p>
+                        <p className="text-gray-500">Video + Story creators • 85 athletes</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -599,7 +599,7 @@ export const PublicShowcase: React.FC = () => {
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-yellow/20 rounded-full text-orange-600 font-bold mb-3">
                             <Users className="w-5 h-5" /> Sub Club Athletes
                         </div>
-                        <p className="text-gray-500">Story creators • {stats.subClub.count} athletes</p>
+                        <p className="text-gray-500">Story creators • 340 athletes</p>
                     </div>
 
                     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 max-w-md mx-auto">
@@ -853,7 +853,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.1.8</p>
+                <p className="text-xs text-gray-400 mt-2">v1.1.9</p>
             </footer>
 
             {/* Athlete Detail Modal */}
