@@ -3,9 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-// Brand deal ID for "IG Story" campaign (Deal #1 - matches carousel athletes)
-// Note: "Complete Partnership" campaign (Deal #2: 6940ab2db1b5bacae82de3d8) has different athletes
-const BRAND_DEAL_ID = '694830dca630d563ba4c77c1';
+// Brand deal IDs for Subway campaigns
+// Story campaign (IG Story - 340 athletes)
+const STORY_BRAND_DEAL_ID = '694830dca630d563ba4c77c1';
+// Video campaign (Complete Partnership / Featured Athletes - 85 athletes)
+const VIDEO_BRAND_DEAL_ID = '6940ab2db1b5bacae82de3d8';
 
 // S3 bucket to CloudFront domain mapping
 const S3_TO_CLOUDFRONT: Record<string, string> = {
@@ -81,10 +83,11 @@ function parseCSVLine(line: string): string[] {
 }
 
 /**
- * Check if a URL belongs to the target brand deal
+ * Check if a URL belongs to either target brand deal (story OR video)
  */
 function isTargetBrandDeal(url: string): boolean {
-    return url.includes(`brand-deals/${BRAND_DEAL_ID}`);
+    return url.includes(`brand-deals/${STORY_BRAND_DEAL_ID}`) ||
+        url.includes(`brand-deals/${VIDEO_BRAND_DEAL_ID}`);
 }
 
 /**
@@ -246,45 +249,45 @@ export default async function handler(
             return;
         }
 
-    // GET /api/athlete-media?hash=xxx - Get signed URLs for a specific media item
-    if (req.method === 'GET' && hash && typeof hash === 'string') {
-        try {
-            const { hashMap } = loadAthleteData();
+        // GET /api/athlete-media?hash=xxx - Get signed URLs for a specific media item
+        if (req.method === 'GET' && hash && typeof hash === 'string') {
+            try {
+                const { hashMap } = loadAthleteData();
 
-            const imageUrl = hashMap.get(`${hash}-image`);
-            const videoUrl = hashMap.get(`${hash}-video`);
-            const thumbnailUrl = hashMap.get(`${hash}-thumbnail`);
+                const imageUrl = hashMap.get(`${hash}-image`);
+                const videoUrl = hashMap.get(`${hash}-video`);
+                const thumbnailUrl = hashMap.get(`${hash}-thumbnail`);
 
-            if (!imageUrl && !videoUrl && !thumbnailUrl) {
-                res.status(404).json({ error: 'Media not found' });
-                return;
+                if (!imageUrl && !videoUrl && !thumbnailUrl) {
+                    res.status(404).json({ error: 'Media not found' });
+                    return;
+                }
+
+                // Sign the URLs
+                const result: Record<string, string | null> = {};
+
+                if (imageUrl) {
+                    const resourceKey = getCloudFrontPath(imageUrl);
+                    result.signedImageUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
+                }
+
+                if (videoUrl) {
+                    const resourceKey = getCloudFrontPath(videoUrl);
+                    result.signedVideoUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
+                }
+
+                if (thumbnailUrl) {
+                    const resourceKey = getCloudFrontPath(thumbnailUrl);
+                    result.signedThumbnailUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
+                }
+
+                res.status(200).json(result);
+            } catch (error) {
+                console.error('[athlete-media] Error signing URLs:', error);
+                res.status(500).json({ error: 'Internal server error' });
             }
-
-            // Sign the URLs
-            const result: Record<string, string | null> = {};
-
-            if (imageUrl) {
-                const resourceKey = getCloudFrontPath(imageUrl);
-                result.signedImageUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
-            }
-
-            if (videoUrl) {
-                const resourceKey = getCloudFrontPath(videoUrl);
-                result.signedVideoUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
-            }
-
-            if (thumbnailUrl) {
-                const resourceKey = getCloudFrontPath(thumbnailUrl);
-                result.signedThumbnailUrl = resourceKey ? await getSignedUrl(resourceKey) : null;
-            }
-
-            res.status(200).json(result);
-        } catch (error) {
-            console.error('[athlete-media] Error signing URLs:', error);
-            res.status(500).json({ error: 'Internal server error' });
+            return;
         }
-        return;
-    }
 
         res.status(405).json({ error: 'Method not allowed' });
     } catch (error) {

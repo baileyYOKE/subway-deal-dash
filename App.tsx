@@ -11,10 +11,10 @@ import { Alerts } from './components/Alerts';
 import { VersionHistory } from './components/VersionHistory';
 import { ShowcaseAdmin } from './components/ShowcaseAdmin';
 import { ChangeNotification, StatChange, calculateCampaignStats, calculateStatChanges } from './components/ChangeNotification';
-import { Lock, LayoutDashboard, Table as TableIcon, Database, LogOut, Cloud, CloudOff, AlertCircle, AlertTriangle, Save, RefreshCw, History, Sparkles } from 'lucide-react';
+import { Lock, LayoutDashboard, Table as TableIcon, Database, LogOut, Cloud, CloudOff, AlertCircle, AlertTriangle, Save, RefreshCw, History, Trophy } from 'lucide-react';
 
 // App version - increment on each deploy for easy tracking
-const APP_VERSION = '1.1.7';
+const APP_VERSION = '1.1.8';
 
 const PASSCODE = 'nil';
 
@@ -453,7 +453,7 @@ const App: React.FC = () => {
               <NavButton
                 active={activeTab === Tab.SHOWCASE}
                 onClick={() => setActiveTab(Tab.SHOWCASE)}
-                icon={<Sparkles size={18} />}
+                icon={<Trophy size={18} />}
                 label="Showcase"
               />
               <NavButton

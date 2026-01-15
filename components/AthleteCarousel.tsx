@@ -187,18 +187,14 @@ export const parseAthleteImageCSV = (csvText: string): AthleteImage[] => {
     return athletes;
 };
 
-// Helper to convert Athlete[] to AthleteImage[] for the carousel
-// Only includes athletes with BOTH profile image AND content
+// Only include athletes with profile image (content is nice to have but not required for display)
 export const athletesToCarouselImages = (athletes: Athlete[]): AthleteImage[] => {
     return athletes
         .filter(a => !a.user_name.startsWith('Video_Athlete_') && !a.user_name.startsWith('Story_Athlete_'))
-        // Only include if they have profile image AND (content image OR content video)
+        // Only filter on profile image - shows all athletes in carousel
         .filter(a => {
             const hasProfileImage = a.profile_image_url && a.profile_image_url.startsWith('http');
-            const hasContent = (a.content_image_url && a.content_image_url.startsWith('http')) ||
-                (a.content_video_url && a.content_video_url.startsWith('http')) ||
-                (a.ig_reel_url && a.ig_reel_url.startsWith('http'));
-            return hasProfileImage && hasContent;
+            return hasProfileImage;
         })
         .map(a => {
             const nameParts = a.user_name.split(' ');

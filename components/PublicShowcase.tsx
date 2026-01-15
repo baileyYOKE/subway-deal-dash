@@ -3,7 +3,7 @@ import { Athlete } from '../types';
 import { loadDataFromCloud, loadShowcaseData, loadScrapedComments, TopContent, FeaturedComment, ScrapedCommentsStore } from '../services/dataService';
 import { AthleteListItem, loadAthleteList, createAthleteLookup } from '../services/mediaService';
 import { isBaselineAthlete } from '../services/baselineAthletes';
-import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart, BarChart3, Sparkles, Zap, Star } from 'lucide-react';
+import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart, BarChart3, Award, Zap, Star } from 'lucide-react';
 import { AthleteCarousel, AthleteImage, parseAthleteImageCSV, athletesToCarouselImages } from './AthleteCarousel';
 import { AthleteDetailModal } from './AthleteDetailModal';
 import { AthleteMediaModal } from './AthleteMediaModal';
@@ -466,7 +466,7 @@ export const PublicShowcase: React.FC = () => {
             <header className="pt-20 pb-16 px-8 text-center relative">
                 <div className="max-w-4xl mx-auto">
                     <div className="inline-flex items-center gap-2 px-5 py-2 bg-subway-green/10 rounded-full text-subway-green font-bold mb-8 animate-slide-in">
-                        <Sparkles className="w-5 h-5" />
+                        <Award className="w-5 h-5" />
                         Campaign Results Are In!
                     </div>
                     <h1 className="text-6xl md:text-7xl font-black mb-6 text-gray-900 animate-slide-in" style={{ animationDelay: '0.1s' }}>
@@ -790,7 +790,7 @@ export const PublicShowcase: React.FC = () => {
                                 </div>
                                 <div className="p-4 bg-emerald-50 border-t border-emerald-100">
                                     <p className="text-sm text-emerald-700 text-center">
-                                        <Sparkles className="w-4 h-4 inline mr-1" />
+                                        <Star className="w-4 h-4 inline mr-1" />
                                         <strong>Key Takeaway:</strong> Athletes with under 1K followers deliver the highest reach
                                         and engagement rates, making them ideal partners for authentic brand storytelling.
                                     </p>

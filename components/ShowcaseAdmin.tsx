@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Athlete } from '../types';
 import { TopContent, FeaturedComment, saveShowcaseData, loadShowcaseData, loadScrapedComments, ScrapedCommentsStore, saveScrapedComments } from '../services/dataService';
 import { scrapeAllComments, ScrapedComment, analyzeCommentsWithGemini, generateWordCloudData, WordCloudItem } from '../services/commentsService';
-import { Upload, Video, Image, MessageCircle, GitCompare, Plus, Trash2, Sparkles, Save, Check, Search, Star, Loader2, History, Brain, BarChart3 } from 'lucide-react';
+import { Upload, Video, Image, MessageCircle, GitCompare, Plus, Trash2, Trophy, Save, Check, Search, Star, Loader2, History, Brain, BarChart3 } from 'lucide-react';
 import { WordCloud } from './WordCloud';
 
 interface Props {
@@ -343,7 +343,7 @@ export const ShowcaseAdmin: React.FC<Props> = ({ data, onUpdate }) => {
         <div className="space-y-8">
             <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
-                    <Sparkles className="w-6 h-6 text-subway-green" />
+                    <Trophy className="w-6 h-6 text-subway-green" />
                     Public Showcase Manager
                 </h2>
                 <p className="text-gray-500">Manage content displayed on the public campaign page</p>
