@@ -23,20 +23,21 @@ const MediaView: React.FC<{ media: SignedMediaItem; isLoading: boolean }> = ({ m
         );
     }
 
-    // Video content
-    if (media.signedVideoUrl) {
+    // Video content - check for truthy URL
+    if (media.signedVideoUrl && media.signedVideoUrl.length > 0) {
         return (
             <video
                 src={media.signedVideoUrl}
                 poster={media.signedThumbnailUrl || undefined}
                 controls
+                autoPlay
                 className="w-full max-h-[60vh] rounded-xl object-contain bg-black"
             />
         );
     }
 
-    // Image content
-    if (media.signedImageUrl && !imageError) {
+    // Image content - check for truthy URL
+    if (media.signedImageUrl && media.signedImageUrl.length > 0 && !imageError) {
         return (
             <img
                 src={media.signedImageUrl}
@@ -95,20 +96,23 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                 const directUrl = firstMedia.hash.replace('direct-video:', '').replace('direct:', '');
                 console.log('[AthleteMediaModal] Using direct S3 URL:', directUrl, 'isVideo:', isVideo);
 
+                // Create media item with proper URL assignment
+                const mediaItem: SignedMediaItem = {
+                    signedImageUrl: isVideo ? '' : directUrl,
+                    signedVideoUrl: isVideo ? directUrl : '',
+                    signedThumbnailUrl: '',
+                    mediaType: firstMedia.mediaType,
+                    instagramPermalink: '',
+                    hasVideo: isVideo,
+                    hasImage: !isVideo
+                };
+
                 const directMediaResponse: AthleteMediaResponse = {
                     firstName: athlete.firstName,
                     lastName: athlete.lastName,
                     sport: athlete.sport,
                     campaign: athlete.campaign,
-                    media: [{
-                        signedImageUrl: isVideo ? null : directUrl,
-                        signedVideoUrl: isVideo ? directUrl : null,
-                        signedThumbnailUrl: null,
-                        mediaType: firstMedia.mediaType,
-                        instagramPermalink: '', // Expired
-                        hasVideo: isVideo,
-                        hasImage: !isVideo
-                    }]
+                    media: [mediaItem]
                 };
 
                 if (!cancelled) {
