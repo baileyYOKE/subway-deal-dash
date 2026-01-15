@@ -371,6 +371,127 @@ export const ShowcaseAdmin: React.FC<Props> = ({ data, onUpdate }) => {
                 </div>
             </div>
 
+            {/* Carousel Check Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <GitCompare className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Carousel Check</h3>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">Verify data table counts match carousel display counts</p>
+
+                {(() => {
+                    // Calculate counts from data table
+                    const realAthletes = data.filter(a =>
+                        !a.user_name.startsWith('Video_Athlete_') &&
+                        !a.user_name.startsWith('Story_Athlete_')
+                    );
+
+                    // Featured = TikTok OR Reel views
+                    const featuredAthletes = realAthletes.filter(a =>
+                        (a.tiktok_views || 0) > 0 || (a.ig_reel_views || 0) > 0
+                    );
+
+                    // SubClub = Only story (no video)
+                    const subClubAthletes = realAthletes.filter(a =>
+                        (a.tiktok_views || 0) === 0 &&
+                        (a.ig_reel_views || 0) === 0 &&
+                        (a.ig_story_1_views || 0) > 0
+                    );
+
+                    // Count athletes with profile pic + content for each group
+                    const featuredWithProfilePic = featuredAthletes.filter(a =>
+                        a.profile_image_url && a.profile_image_url.startsWith('http')
+                    );
+                    const subClubWithProfilePic = subClubAthletes.filter(a =>
+                        a.profile_image_url && a.profile_image_url.startsWith('http')
+                    );
+
+                    // Carousel filter: only needs profile_image_url starting with 'http'
+                    const carouselEligible = realAthletes.filter(a =>
+                        a.profile_image_url && a.profile_image_url.startsWith('http')
+                    );
+
+                    // Featured in carousel (has video content + profile pic)
+                    const featuredInCarousel = carouselEligible.filter(a =>
+                        (a.tiktok_views || 0) > 0 || (a.ig_reel_views || 0) > 0
+                    );
+
+                    // SubClub in carousel (story only + profile pic)
+                    const subClubInCarousel = carouselEligible.filter(a =>
+                        (a.tiktok_views || 0) === 0 &&
+                        (a.ig_reel_views || 0) === 0 &&
+                        (a.ig_story_1_views || 0) > 0
+                    );
+
+                    const featuredMatch = featuredWithProfilePic.length === featuredInCarousel.length;
+                    const subClubMatch = subClubWithProfilePic.length === subClubInCarousel.length;
+
+                    return (
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Featured Athletes */}
+                            <div className={`p-4 rounded-lg border-2 ${featuredMatch ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <Video className="w-4 h-4" /> Featured Athletes
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Total in data table:</span>
+                                        <span className="font-medium">{featuredAthletes.length}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">With profile pic:</span>
+                                        <span className="font-medium">{featuredWithProfilePic.length}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">In carousel:</span>
+                                        <span className="font-medium">{featuredInCarousel.length}</span>
+                                    </div>
+                                    <div className={`flex justify-between pt-2 border-t ${featuredMatch ? 'text-green-700' : 'text-red-700'}`}>
+                                        <span>Status:</span>
+                                        <span className="font-bold">{featuredMatch ? '✓ Match' : '✗ Mismatch'}</span>
+                                    </div>
+                                    {!featuredMatch && (
+                                        <p className="text-xs text-red-600 mt-2">
+                                            Missing: {featuredAthletes.length - featuredWithProfilePic.length} athletes need profile pics
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* SubClub Athletes */}
+                            <div className={`p-4 rounded-lg border-2 ${subClubMatch ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <Image className="w-4 h-4" /> SubClub Athletes
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Total in data table:</span>
+                                        <span className="font-medium">{subClubAthletes.length}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">With profile pic:</span>
+                                        <span className="font-medium">{subClubWithProfilePic.length}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">In carousel:</span>
+                                        <span className="font-medium">{subClubInCarousel.length}</span>
+                                    </div>
+                                    <div className={`flex justify-between pt-2 border-t ${subClubMatch ? 'text-green-700' : 'text-red-700'}`}>
+                                        <span>Status:</span>
+                                        <span className="font-bold">{subClubMatch ? '✓ Match' : '✗ Mismatch'}</span>
+                                    </div>
+                                    {!subClubMatch && (
+                                        <p className="text-xs text-red-600 mt-2">
+                                            Missing: {subClubAthletes.length - subClubWithProfilePic.length} athletes need profile pics
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </div>
+
             {/* Top Content Section */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center gap-2 mb-4">

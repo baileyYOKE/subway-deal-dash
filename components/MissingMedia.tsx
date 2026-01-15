@@ -170,30 +170,56 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
     }, [data]);
 
     // Find athletes with partial media (some but not all)
+    // For Subway Deal 2:
+    // - Featured Athletes (TikTok/Reel): Need TikTok OR Reel + Story 1 + Profile Pic
+    // - SubClub Athletes (Story only): Need Story 1 + Profile Pic
     const athletesWithMissing = useMemo(() => {
         return data
             .map(athlete => {
                 const hasTikTok = !!(athlete.tiktok_post_url && athlete.tiktok_post_url.length > 0);
                 const hasReel = !!(athlete.ig_reel_url && athlete.ig_reel_url.length > 0) || athlete.ig_reel_views > 0;
                 const hasStory1 = athlete.ig_story_1_views > 0;
-                const hasStory2 = athlete.ig_story_2_views > 0;
-                const hasStory3 = athlete.ig_story_3_views > 0;
+                const hasProfilePic = !!(athlete.profile_image_url && athlete.profile_image_url.length > 0);
 
-                const present = [hasTikTok, hasReel, hasStory1, hasStory2, hasStory3];
-                const presentCount = present.filter(Boolean).length;
+                // Determine athlete type
+                const isFeatured = hasTikTok || hasReel;
+                const isSubClub = !isFeatured && hasStory1;
+
+                // For Featured: need video + story + profile pic
+                // For SubClub: need story + profile pic
+                let isComplete = false;
+                let missingItems: string[] = [];
+
+                if (isFeatured) {
+                    // Featured athlete - needs (TikTok OR Reel) + Story 1 + Profile Pic
+                    if (!hasTikTok && !hasReel) missingItems.push('TikTok/Reel');
+                    if (!hasStory1) missingItems.push('Story');
+                    if (!hasProfilePic) missingItems.push('Profile Pic');
+                    isComplete = (hasTikTok || hasReel) && hasStory1 && hasProfilePic;
+                } else if (isSubClub) {
+                    // SubClub athlete - needs Story 1 + Profile Pic
+                    if (!hasStory1) missingItems.push('Story');
+                    if (!hasProfilePic) missingItems.push('Profile Pic');
+                    isComplete = hasStory1 && hasProfilePic;
+                } else {
+                    // No content at all - skip
+                    return null;
+                }
 
                 return {
                     athlete,
                     hasTikTok,
                     hasReel,
                     hasStory1,
-                    hasStory2,
-                    hasStory3,
-                    presentCount
+                    hasProfilePic,
+                    isFeatured,
+                    isSubClub,
+                    missingItems,
+                    isComplete
                 };
             })
-            .filter(a => a.presentCount > 0 && a.presentCount < 5)
-            .sort((a, b) => b.presentCount - a.presentCount);
+            .filter(a => a !== null && !a.isComplete)
+            .sort((a, b) => a!.missingItems.length - b!.missingItems.length);
     }, [data]);
 
     const handleExpand = (id: string) => {
@@ -265,7 +291,7 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
     const handleMockAllMissing = () => {
         try {
             const athletesToMock = athletesWithMissing.filter(
-                a => !a.hasStory1 || !a.hasStory2 || !a.hasStory3
+                a => a && !a.hasStory1
             );
 
             if (athletesToMock.length === 0) {
@@ -274,7 +300,7 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
             }
 
             const confirmed = confirm(
-                `This will fill missing story data for ${athletesToMock.length} athletes using:\n\n` +
+                `This will fill missing Story 1 data for ${athletesToMock.length} athletes using:\n\n` +
                 `📊 Historical Ratios (from ${historicalRatios.sampleSize} real stories):\n` +
                 `• Taps/Views: ${(historicalRatios.tapsToViews * 100).toFixed(1)}%\n` +
                 `• Replies/Views: ${(historicalRatios.repliesToViews * 100).toFixed(2)}%\n` +
@@ -285,16 +311,15 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
             if (!confirmed) return;
 
             let mockCount = 0;
-            const athleteIdsToMock = new Set(athletesToMock.map(a => a.athlete.id));
+            const athleteIdsToMock = new Set(athletesToMock.map(a => a!.athlete.id));
 
             const newData = data.map(athlete => {
                 if (!athleteIdsToMock.has(athlete.id)) return athlete;
 
-                const athleteInfo = athletesToMock.find(a => a.athlete.id === athlete.id);
+                const athleteInfo = athletesToMock.find(a => a!.athlete.id === athlete.id);
                 if (!athleteInfo) return athlete;
 
                 const updated = { ...athlete };
-                let didMock = false;
 
                 // Mock Story 1 if missing
                 if (!athleteInfo.hasStory1) {
@@ -304,37 +329,8 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                     updated.ig_story_1_taps = mock.taps;
                     updated.ig_story_1_replies = mock.replies;
                     updated.ig_story_1_shares = mock.shares;
-                    mockCount++;
-                    didMock = true;
-                }
-
-                // Mock Story 2 if missing
-                if (!athleteInfo.hasStory2) {
-                    const views = estimateStoryViews(athlete);
-                    const mock = generateMockStoryData(views, historicalRatios);
-                    updated.ig_story_2_views = views;
-                    updated.ig_story_2_taps = mock.taps;
-                    updated.ig_story_2_replies = mock.replies;
-                    updated.ig_story_2_shares = mock.shares;
-                    mockCount++;
-                    didMock = true;
-                }
-
-                // Mock Story 3 if missing
-                if (!athleteInfo.hasStory3) {
-                    const views = estimateStoryViews(athlete);
-                    const mock = generateMockStoryData(views, historicalRatios);
-                    updated.ig_story_3_views = views;
-                    updated.ig_story_3_taps = mock.taps;
-                    updated.ig_story_3_replies = mock.replies;
-                    updated.ig_story_3_shares = mock.shares;
-                    mockCount++;
-                    didMock = true;
-                }
-
-                // Mark as having mock data
-                if (didMock) {
                     updated.has_mock_data = true;
+                    mockCount++;
                 }
 
                 return updated;
@@ -448,7 +444,9 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
             </div>
 
             <div className="space-y-2">
-                {athletesWithMissing.map(({ athlete, hasTikTok, hasReel, hasStory1, hasStory2, hasStory3, presentCount }) => {
+                {athletesWithMissing.map((item) => {
+                    if (!item) return null;
+                    const { athlete, hasTikTok, hasReel, hasStory1, hasProfilePic, isFeatured, isSubClub, missingItems } = item;
                     const isExpanded = expandedId === athlete.id;
                     const values = editValues[athlete.id] || {};
 
@@ -471,27 +469,38 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                                                 {athlete.assigned_to}
                                             </span>
                                         )}
+                                        {isFeatured && (
+                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                                                Featured
+                                            </span>
+                                        )}
+                                        {isSubClub && (
+                                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
+                                                SubClub
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex gap-2 flex-wrap">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasTikTok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {hasTikTok ? '✓' : '✗'} TikTok
-                                        </span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasReel ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {hasReel ? '✓' : '✗'} Reel
-                                        </span>
+                                        {isFeatured && (
+                                            <>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasTikTok ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {hasTikTok ? '✓' : '-'} TikTok
+                                                </span>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasReel ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {hasReel ? '✓' : '-'} Reel
+                                                </span>
+                                            </>
+                                        )}
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasStory1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {hasStory1 ? '✓' : '✗'} S1
+                                            {hasStory1 ? '✓' : '✗'} Story
                                         </span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasStory2 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {hasStory2 ? '✓' : '✗'} S2
-                                        </span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasStory3 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                            {hasStory3 ? '✓' : '✗'} S3
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasProfilePic ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {hasProfilePic ? '✓' : '✗'} Profile Pic
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm text-gray-500">{presentCount}/5</span>
+                                    <span className="text-sm text-orange-600 font-medium">Missing: {missingItems.join(', ')}</span>
                                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                 </div>
                             </div>
@@ -581,109 +590,27 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                                         </div>
                                     </div>
 
-                                    {/* Story 2 */}
-                                    <div className={!hasStory2 ? 'ring-2 ring-orange-200 rounded-lg p-4 bg-white' : 'p-4 bg-white rounded-lg border border-gray-200'}>
+                                    {/* Profile Picture URL */}
+                                    <div className={!hasProfilePic ? 'ring-2 ring-orange-200 rounded-lg p-4 bg-white' : 'p-4 bg-white rounded-lg border border-gray-200'}>
                                         <h4 className="text-sm font-semibold text-gray-800 mb-3">
-                                            Story 2 {!hasStory2 && <span className="text-orange-500 font-normal">*Missing</span>}
+                                            Profile Picture {!hasProfilePic && <span className="text-orange-500 font-normal">*Missing</span>}
                                         </h4>
-                                        <div className="grid grid-cols-4 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Views</label>
+                                        <div className="flex gap-4 items-center">
+                                            <div className="flex-1">
+                                                <label className="block text-xs text-gray-500 mb-1">Profile Image URL</label>
                                                 <input
                                                     type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_2_views')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_2_views', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
+                                                    value={String(getVal('profile_image_url') || '')}
+                                                    onChange={(e) => handleFieldChange(athlete.id, 'profile_image_url', e.target.value)}
+                                                    placeholder="https://..."
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
                                                 />
                                             </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Taps</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_2_taps')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_2_taps', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Replies</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_2_replies')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_2_replies', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Shares</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_2_shares')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_2_shares', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Story 3 */}
-                                    <div className={!hasStory3 ? 'ring-2 ring-orange-200 rounded-lg p-4 bg-white' : 'p-4 bg-white rounded-lg border border-gray-200'}>
-                                        <h4 className="text-sm font-semibold text-gray-800 mb-3">
-                                            Story 3 {!hasStory3 && <span className="text-orange-500 font-normal">*Missing</span>}
-                                        </h4>
-                                        <div className="grid grid-cols-4 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Views</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_3_views')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_3_views', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Taps</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_3_taps')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_3_taps', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Replies</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_3_replies')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_3_replies', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Shares</label>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={getVal('ig_story_3_shares')}
-                                                    onChange={(e) => handleFieldChange(athlete.id, 'ig_story_3_shares', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
-                                                />
-                                            </div>
+                                            {athlete.profile_image_url && (
+                                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                                                    <img src={athlete.profile_image_url} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
