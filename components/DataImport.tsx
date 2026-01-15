@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, RefreshCw, Film, FileWarning, Image, Download, Trash2, Shield } from 'lucide-react';
+import { Upload, RefreshCw, Film, FileWarning, Image, Download, Trash2, Shield, Database } from 'lucide-react';
 
 interface Props {
   onImport: (file: File) => void;
@@ -9,6 +9,7 @@ interface Props {
   onProfileImageMigration: () => Promise<{ matched: number; notFound: string[] }>;
   onBackupContacts: () => void;
   onPurgeNonBaseline: () => Promise<{ removed: number; kept: number }>;
+  onMediaImport: (file: File) => Promise<{ matched: number; updated: number; unmatched: string[] }>;
   isRefreshing: boolean;
   isVerifyingIG: boolean;
 }
@@ -21,6 +22,7 @@ export const DataImport: React.FC<Props> = ({
   onProfileImageMigration,
   onBackupContacts,
   onPurgeNonBaseline,
+  onMediaImport,
   isRefreshing,
   isVerifyingIG
 }) => {
@@ -29,7 +31,10 @@ export const DataImport: React.FC<Props> = ({
   const [migrationResult, setMigrationResult] = useState<{ matched: number; notFound: string[] } | null>(null);
   const [isPurging, setIsPurging] = useState(false);
   const [purgeResult, setPurgeResult] = useState<{ removed: number; kept: number } | null>(null);
+  const [isImportingMedia, setIsImportingMedia] = useState(false);
+  const [mediaImportResult, setMediaImportResult] = useState<{ matched: number; updated: number } | null>(null);
   const lowPriorityInputRef = useRef<HTMLInputElement>(null);
+  const mediaImportRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -87,6 +92,22 @@ export const DataImport: React.FC<Props> = ({
       console.error('Purge error:', error);
     }
     setIsPurging(false);
+  };
+
+  const handleMediaImportChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    setIsImportingMedia(true);
+    setMediaImportResult(null);
+    try {
+      const result = await onMediaImport(file);
+      setMediaImportResult({ matched: result.matched, updated: result.updated });
+      console.log(`Media import: matched ${result.matched}, updated ${result.updated}, unmatched: ${result.unmatched.length}`);
+    } catch (error) {
+      console.error('Media import error:', error);
+    }
+    setIsImportingMedia(false);
   };
 
   return (
@@ -179,6 +200,34 @@ export const DataImport: React.FC<Props> = ({
         >
           {isMigrating ? 'Migrating...' : 'Run Migration'}
         </button>
+      </div>
+
+      {/* Media Import to Firestore */}
+      <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-500 rounded-lg">
+            <Database className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700">Import Media CSV → Firestore</h4>
+            <p className="text-xs text-gray-500">
+              {mediaImportResult
+                ? `✅ ${mediaImportResult.updated} athletes updated with media`
+                : 'Import combined_campaigns_with_media.csv into Firestore'}
+            </p>
+          </div>
+        </div>
+        <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition ${isImportingMedia ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}>
+          <span>{isImportingMedia ? 'Importing...' : 'Select Media CSV'}</span>
+          <input
+            ref={mediaImportRef}
+            type="file"
+            className="hidden"
+            accept=".csv"
+            onChange={handleMediaImportChange}
+            disabled={isImportingMedia}
+          />
+        </label>
       </div>
 
       {/* Low Priority Section */}

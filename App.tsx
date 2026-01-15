@@ -14,7 +14,7 @@ import { ChangeNotification, StatChange, calculateCampaignStats, calculateStatCh
 import { Lock, LayoutDashboard, Table as TableIcon, Database, LogOut, Cloud, CloudOff, AlertCircle, AlertTriangle, Save, RefreshCw, History, Trophy } from 'lucide-react';
 
 // App version - increment on each deploy for easy tracking
-const APP_VERSION = '1.3.6';
+const APP_VERSION = '1.3.7';
 
 const PASSCODE = 'nil';
 
@@ -648,6 +648,75 @@ const App: React.FC = () => {
                   dismissedAlerts
                 }, 'purge-non-baseline');
                 return { removed: removed.length, kept: kept.length };
+              }}
+              onMediaImport={async (file) => {
+                const text = await file.text();
+                const lines = text.trim().split('\n');
+                const matched: string[] = [];
+                const unmatched: string[] = [];
+                let updated = 0;
+
+                // Build name lookup from current data
+                const dataByName = new Map<string, number>();
+                data.forEach((a, i) => {
+                  dataByName.set(a.user_name.toLowerCase().trim(), i);
+                });
+
+                const updatedData = [...data];
+
+                // Parse CSV (skip header)
+                for (let i = 1; i < lines.length; i++) {
+                  const line = lines[i].replace(/\r/g, '');
+                  if (!line.trim()) continue;
+
+                  const parts = line.split(',');
+                  const firstName = parts[0]?.trim().replace(/"/g, '') || '';
+                  const lastName = parts[1]?.trim().replace(/"/g, '') || '';
+                  const campaign = parts[5]?.trim().replace(/"/g, '') || '';
+                  const fullName = `${firstName} ${lastName}`.toLowerCase().trim();
+
+                  const idx = dataByName.get(fullName);
+                  if (idx !== undefined) {
+                    matched.push(fullName);
+                    // Parse media items
+                    const media: { imageUrl?: string; videoUrl?: string; thumbnailUrl?: string; instagramPermalink?: string; mediaType?: string }[] = [];
+                    for (let m = 0; m < 3; m++) {
+                      const baseIdx = 6 + (m * 5);
+                      const imageUrl = parts[baseIdx]?.trim().replace(/"/g, '') || '';
+                      const videoUrl = parts[baseIdx + 1]?.trim().replace(/"/g, '') || '';
+                      const thumbnailUrl = parts[baseIdx + 2]?.trim().replace(/"/g, '') || '';
+                      const instagramPermalink = parts[baseIdx + 3]?.trim().replace(/"/g, '') || '';
+                      const mediaType = parts[baseIdx + 4]?.trim().replace(/"/g, '') || '';
+                      if (imageUrl || videoUrl) {
+                        media.push({
+                          imageUrl: imageUrl || undefined,
+                          videoUrl: videoUrl || undefined,
+                          thumbnailUrl: thumbnailUrl || undefined,
+                          instagramPermalink: instagramPermalink || undefined,
+                          mediaType: mediaType || undefined
+                        });
+                      }
+                    }
+                    if (media.length > 0) {
+                      (updatedData[idx] as unknown as Record<string, unknown>).media = media;
+                      (updatedData[idx] as unknown as Record<string, unknown>).campaign = campaign;
+                      updated++;
+                    }
+                  } else {
+                    unmatched.push(fullName);
+                  }
+                }
+
+                setData(updatedData);
+                // Save to cloud
+                await saveDataToCloudNow(updatedData, {
+                  failedTikTokUrls,
+                  failedInstagramUrls,
+                  dismissedAlerts
+                }, 'media-import');
+
+                console.log(`Media import: matched ${matched.length}, updated ${updated}, unmatched ${unmatched.length}`);
+                return { matched: matched.length, updated, unmatched };
               }}
               isRefreshing={isRefreshing}
               isVerifyingIG={isVerifyingIG}
