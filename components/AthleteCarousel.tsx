@@ -103,18 +103,25 @@ export const AthleteCarousel: React.FC<Props> = ({ athletes, onAthleteClick, pau
 
     if (athletes.length === 0) return null;
 
-    // Each row gets the same full list of athletes - CSS animation handles the loop
-    // This ensures each belt is always full
+    // Split athletes into 3 groups - each row gets unique athletes
+    const totalAthletes = athletes.length;
+    const groupSize = Math.ceil(totalAthletes / 3);
+    const row1Athletes = athletes.slice(0, groupSize);
+    const row2Athletes = athletes.slice(groupSize, groupSize * 2);
+    const row3Athletes = athletes.slice(groupSize * 2);
+
+    console.log(`[AthleteCarousel] Total: ${totalAthletes}, Per row: ~${groupSize} (${row1Athletes.length}, ${row2Athletes.length}, ${row3Athletes.length})`);
+
     return (
         <div className="relative overflow-hidden py-4">
             {/* Gradient overlays for fade effect - light theme */}
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
 
-            {/* Three rows - each has all athletes, different speeds/directions */}
-            <CarouselRow athletes={athletes} direction="left" duration={400} onAthleteClick={onAthleteClick} paused={paused} />
-            <CarouselRow athletes={athletes} direction="right" duration={440} onAthleteClick={onAthleteClick} paused={paused} />
-            <CarouselRow athletes={athletes} direction="left" duration={480} onAthleteClick={onAthleteClick} paused={paused} />
+            {/* Three rows - each has UNIQUE athletes, different speeds/directions */}
+            <CarouselRow athletes={row1Athletes} direction="left" duration={400} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={row2Athletes} direction="right" duration={440} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={row3Athletes} direction="left" duration={480} onAthleteClick={onAthleteClick} paused={paused} />
         </div>
     );
 };
