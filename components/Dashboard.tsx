@@ -22,7 +22,13 @@ export const Dashboard: React.FC<Props> = ({ data }) => {
     let igStoryViews = 0;
     let igStoryEngagements = 0;
 
-    data.forEach(a => {
+    // Filter out placeholder athletes first
+    const realAthletes = data.filter(a =>
+      !a.user_name.startsWith('Video_Athlete_') &&
+      !a.user_name.startsWith('Story_Athlete_')
+    );
+
+    realAthletes.forEach(a => {
       const hasContent = a.tiktok_views > 0 || a.ig_reel_views > 0 || a.ig_story_1_views > 0;
 
       // Count TikToks posted (has URL or views)
