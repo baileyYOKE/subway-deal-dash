@@ -113,6 +113,10 @@ export const DataTable: React.FC<Props> = ({ data, onUpdate }) => {
     // Content URLs (S3 media)
     { label: 'Content Image', key: 'content_image_url', width: 'w-48' },
     { label: 'Content Video', key: 'content_video_url', width: 'w-48' },
+    // IG Account Info
+    { label: 'IG Username', key: 'ig_username', width: 'w-32' },
+    { label: 'IG Followers', key: 'ig_followers', width: 'w-24', type: 'number' },
+    { label: 'IG Profile URL', key: 'ig_profile_url', width: 'w-48' },
     // URLs
     { label: 'IG Reel URL', key: 'ig_reel_url', width: 'w-48' },
     { label: 'IG Story URL', key: 'ig_story_url', width: 'w-48' },

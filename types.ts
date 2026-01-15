@@ -18,7 +18,12 @@ export interface Athlete {
   // Instagram URLs
   ig_reel_url: string;
   ig_story_url?: string; // Instagram story permalink
+  ig_profile_url?: string; // Instagram profile URL
   tiktok_post_url: string;
+
+  // IG Account Info
+  ig_username?: string; // Instagram username
+  ig_followers?: number; // Instagram follower count
 
   // TikTok Metrics
   tiktok_views: number;
