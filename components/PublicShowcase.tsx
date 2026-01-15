@@ -384,8 +384,6 @@ export const PublicShowcase: React.FC = () => {
                 {/* Floating sandwiches */}
                 <FloatingSandwich emoji="🥖" style={{ top: '10%', left: '10%', animationDelay: '0s' }} />
                 <FloatingSandwich emoji="🥬" style={{ top: '20%', right: '15%', animationDelay: '0.5s' }} />
-                <FloatingSandwich emoji="🍅" style={{ bottom: '30%', left: '8%', animationDelay: '1s' }} />
-                <FloatingSandwich emoji="🧀" style={{ bottom: '20%', right: '10%', animationDelay: '1.5s' }} />
 
                 <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-10 w-full max-w-md border border-subway-green/20 relative z-10">
                     <div className="flex justify-center mb-8">
@@ -451,8 +449,6 @@ export const PublicShowcase: React.FC = () => {
             {/* Floating decorative elements - Subway ingredients */}
             <FloatingSandwich emoji="🥖" style={{ top: '5%', left: '5%', animationDelay: '0s' }} />
             <FloatingSandwich emoji="🥬" style={{ top: '15%', right: '8%', animationDelay: '0.3s' }} />
-            <FloatingSandwich emoji="🍅" style={{ top: '60%', left: '3%', animationDelay: '0.7s' }} />
-            <FloatingSandwich emoji="🧀" style={{ top: '70%', right: '5%', animationDelay: '1s' }} />
             <FloatingSandwich emoji="🥑" style={{ top: '40%', right: '2%', animationDelay: '1.5s' }} />
 
             {/* Hero Header */}
@@ -754,7 +750,7 @@ export const PublicShowcase: React.FC = () => {
                                                 <div className="w-24 flex-shrink-0">
                                                     <div className="text-2xl">{cohort?.icon}</div>
                                                     <div className="text-sm font-bold text-gray-700">{cohort?.name}</div>
-                                                    <div className="text-xs text-gray-400">{cohort?.count} athletes</div>
+                                                    <div className="text-xs text-gray-500">Avg: {cohort?.avgViews?.toLocaleString()} views</div>
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
