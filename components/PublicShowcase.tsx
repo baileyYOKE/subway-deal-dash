@@ -652,6 +652,149 @@ export const PublicShowcase: React.FC = () => {
                 </section>
             )}
 
+            {/* Follower Insights - Story Campaign Analytics */}
+            {data.filter(a => a.campaign_type === 'story' && (a.ig_followers || 0) > 0).length > 0 && (() => {
+                // Calculate cohort metrics
+                const storyAthletes = data.filter(a => a.campaign_type === 'story' && (a.ig_followers || 0) > 0);
+
+                const cohorts = [
+                    { name: 'Under 1K', min: 0, max: 999, color: 'from-emerald-500 to-green-600', icon: '🌱' },
+                    { name: '1K-2K', min: 1000, max: 2000, color: 'from-green-500 to-teal-600', icon: '🌿' },
+                    { name: '2K-3K', min: 2001, max: 3000, color: 'from-teal-500 to-cyan-600', icon: '🌳' },
+                    { name: '3K-5K', min: 3001, max: 5000, color: 'from-cyan-500 to-blue-600', icon: '🌲' },
+                    { name: '5K-10K', min: 5001, max: 10000, color: 'from-blue-500 to-indigo-600', icon: '🏔️' },
+                    { name: '10K+', min: 10001, max: Infinity, color: 'from-indigo-500 to-purple-600', icon: '🏰' },
+                ];
+
+                const cohortData = cohorts.map(cohort => {
+                    const group = storyAthletes.filter(a =>
+                        (a.ig_followers || 0) >= cohort.min && (a.ig_followers || 0) <= cohort.max
+                    );
+                    if (group.length === 0) return null;
+
+                    const totalViews = group.reduce((sum, a) => sum + (a.ig_story_1_views || 0), 0);
+                    const totalFollowers = group.reduce((sum, a) => sum + (a.ig_followers || 0), 0);
+                    const totalEngagements = group.reduce((sum, a) =>
+                        sum + (a.ig_story_1_taps || 0) + (a.ig_story_1_replies || 0) + (a.ig_story_1_shares || 0), 0);
+
+                    return {
+                        ...cohort,
+                        count: group.length,
+                        avgViews: Math.round(totalViews / group.length),
+                        viewsPerFollower: totalViews / totalFollowers,
+                        reachRate: (totalViews / totalFollowers) * 100,
+                        engagementRate: (totalEngagements / totalViews) * 100,
+                    };
+                }).filter(Boolean);
+
+                // Find max values for scaling bars
+                const maxReach = Math.max(...cohortData.map(c => c?.reachRate || 0));
+                const maxEngagement = Math.max(...cohortData.map(c => c?.engagementRate || 0));
+
+                return (
+                    <section className="py-20 px-8 bg-gradient-to-b from-white via-green-50/30 to-white">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="text-center mb-12">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 font-bold mb-4">
+                                    <BarChart3 className="w-5 h-5" /> Story Campaign Insights
+                                </div>
+                                <h2 className="text-4xl font-black text-gray-900 mb-3">
+                                    Smaller Followings, <span className="text-emerald-600">Bigger Impact</span>
+                                </h2>
+                                <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                                    Our data reveals that athletes with smaller followings deliver significantly
+                                    higher reach rates and engagement — proving that <strong>quality trumps quantity</strong>.
+                                </p>
+                            </div>
+
+                            {/* Key Insight Cards */}
+                            <div className="grid md:grid-cols-3 gap-6 mb-12">
+                                <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100">
+                                    <div className="text-5xl mb-3">📊</div>
+                                    <div className="text-3xl font-black text-emerald-600 mb-1">
+                                        {cohortData[0]?.reachRate.toFixed(0)}%
+                                    </div>
+                                    <div className="text-sm text-gray-500 mb-2">Reach Rate (Under 1K)</div>
+                                    <div className="text-xs text-emerald-600 font-medium">
+                                        vs {cohortData[cohortData.length - 1]?.reachRate.toFixed(0)}% for 10K+ accounts
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100">
+                                    <div className="text-5xl mb-3">⚡</div>
+                                    <div className="text-3xl font-black text-emerald-600 mb-1">
+                                        {((cohortData[0]?.reachRate || 1) / (cohortData[cohortData.length - 1]?.reachRate || 1)).toFixed(0)}x
+                                    </div>
+                                    <div className="text-sm text-gray-500 mb-2">More Efficient Reach</div>
+                                    <div className="text-xs text-emerald-600 font-medium">
+                                        Smaller accounts reach more of their audience
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100">
+                                    <div className="text-5xl mb-3">💬</div>
+                                    <div className="text-3xl font-black text-emerald-600 mb-1">
+                                        {cohortData[0]?.engagementRate.toFixed(1)}%
+                                    </div>
+                                    <div className="text-sm text-gray-500 mb-2">Engagement Rate (Under 1K)</div>
+                                    <div className="text-xs text-emerald-600 font-medium">
+                                        {((cohortData[0]?.engagementRate || 1) / (cohortData[cohortData.length - 1]?.engagementRate || 1)).toFixed(1)}x higher than 10K+ accounts
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cohort Comparison Table */}
+                            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-500 to-green-600">
+                                    <h3 className="text-xl font-bold text-white">Performance by Follower Count</h3>
+                                    <p className="text-emerald-100 text-sm">Analyzing {storyAthletes.length} story campaigns</p>
+                                </div>
+                                <div className="p-6">
+                                    <div className="space-y-4">
+                                        {cohortData.map((cohort, idx) => (
+                                            <div key={cohort?.name} className="flex items-center gap-4">
+                                                <div className="w-24 flex-shrink-0">
+                                                    <div className="text-2xl">{cohort?.icon}</div>
+                                                    <div className="text-sm font-bold text-gray-700">{cohort?.name}</div>
+                                                    <div className="text-xs text-gray-400">{cohort?.count} athletes</div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-xs text-gray-500 w-24">Reach Rate</span>
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                                                            <div
+                                                                className={`h-full bg-gradient-to-r ${cohort?.color} rounded-full transition-all`}
+                                                                style={{ width: `${((cohort?.reachRate || 0) / maxReach) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-sm font-bold text-gray-700 w-16">{cohort?.reachRate.toFixed(1)}%</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-gray-500 w-24">Engagement</span>
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                                                            <div
+                                                                className={`h-full bg-gradient-to-r ${cohort?.color} rounded-full transition-all opacity-70`}
+                                                                style={{ width: `${((cohort?.engagementRate || 0) / maxEngagement) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-sm font-bold text-gray-700 w-16">{cohort?.engagementRate.toFixed(2)}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-emerald-50 border-t border-emerald-100">
+                                    <p className="text-sm text-emerald-700 text-center">
+                                        <Sparkles className="w-4 h-4 inline mr-1" />
+                                        <strong>Key Takeaway:</strong> Athletes with under 1K followers deliver the highest reach
+                                        and engagement rates, making them ideal partners for authentic brand storytelling.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                );
+            })()}
+
             {/* Top Content */}
             {topContent.length > 0 && (
                 <section className="py-16 px-8">
