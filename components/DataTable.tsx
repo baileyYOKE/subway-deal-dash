@@ -110,8 +110,12 @@ export const DataTable: React.FC<Props> = ({ data, onUpdate }) => {
     { label: 'TikTok Acct', key: 'tiktok_account', width: 'w-32' },
     { label: 'Assigned To', key: 'assigned_to', width: 'w-32' },
     { label: 'Profile Image', key: 'profile_image_url', width: 'w-32', type: 'image' },
+    // Content URLs (S3 media)
+    { label: 'Content Image', key: 'content_image_url', width: 'w-48' },
+    { label: 'Content Video', key: 'content_video_url', width: 'w-48' },
     // URLs
     { label: 'IG Reel URL', key: 'ig_reel_url', width: 'w-48' },
+    { label: 'IG Story URL', key: 'ig_story_url', width: 'w-48' },
     { label: 'TikTok Post URL', key: 'tiktok_post_url', width: 'w-48' },
     // Computed Rates
     { label: 'Total ER', key: 'total_er', width: 'w-24', computed: true },
