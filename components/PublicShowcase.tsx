@@ -27,7 +27,7 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
     // Featured Athletes stats by platform
     let featuredTikTokViews = 0, featuredTikTokLikes = 0, featuredTikTokComments = 0;
     let featuredReelViews = 0, featuredReelLikes = 0, featuredReelComments = 0;
-    let featuredStoryViews = 0, featuredStoryTaps = 0;
+    let featuredStoryViews = 0, featuredStoryTaps = 0, featuredStoryReplies = 0;
 
     featuredAthletes.forEach(a => {
         featuredTikTokViews += a.tiktok_views || 0;
@@ -38,6 +38,7 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
         featuredReelComments += a.ig_reel_comments || 0;
         featuredStoryViews += a.ig_story_1_views || 0;
         featuredStoryTaps += a.ig_story_1_taps || 0;
+        featuredStoryReplies += a.ig_story_1_replies || 0;
     });
 
     // Sub Club Athletes stats (story only)
@@ -64,7 +65,7 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
             count: featuredAthletes.length,
             tiktok: { views: featuredTikTokViews, likes: featuredTikTokLikes, comments: featuredTikTokComments },
             reel: { views: featuredReelViews, likes: featuredReelLikes, comments: featuredReelComments },
-            story: { views: featuredStoryViews, taps: featuredStoryTaps }
+            story: { views: featuredStoryViews, taps: featuredStoryTaps, replies: featuredStoryReplies }
         },
         subClub: {
             count: subClubAthletes.length,
@@ -729,6 +730,10 @@ export const PublicShowcase: React.FC = () => {
                                             <span className="text-gray-500">Link Taps</span>
                                             <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.taps)}</span>
                                         </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Replies</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.replies || 0)}</span>
+                                        </div>
                                         <div className="pt-3 border-t border-gray-100">
                                             <div className="flex justify-between items-center mb-2">
                                                 <span className="text-gray-700 font-medium">IG Story Eng Rate</span>
@@ -1287,7 +1292,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.5</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.6</p>
             </footer>
 
             {/* Athlete Detail Modal */}
