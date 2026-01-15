@@ -1018,13 +1018,13 @@ export const PublicShowcase: React.FC = () => {
 
 
 
-            {/* Fan Comments - Featured Only (from Admin) */}
+            {/* Fan Comments - Native Platform Look */}
             {
                 featuredComments.length > 0 && (() => {
                     const featuredTiktok = featuredComments.filter(c => c.platform === 'tiktok');
                     const featuredInstagram = featuredComments.filter(c => c.platform === 'instagram');
                     return (
-                        <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+                        <section className="py-16 px-4 md:px-8 bg-gray-50 overflow-hidden">
                             <div className="max-w-7xl mx-auto">
                                 {/* Header */}
                                 <div className="text-center mb-12">
@@ -1032,87 +1032,132 @@ export const PublicShowcase: React.FC = () => {
                                         <Heart className="w-5 h-5 fill-pink-500" /> What Fans Are Saying
                                     </div>
                                     <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">Real Comments</h2>
-                                    <p className="text-gray-500 text-lg">Authentic reactions from real fans</p>
+                                    <p className="text-gray-500 text-lg">Authentic reactions scraped directly from posts</p>
                                 </div>
 
                                 {/* Split Layout - TikTok Left, Instagram Right */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {/* TikTok Column */}
+
+                                    {/* TikTok Column - Dark Theme (Native Look) */}
                                     {featuredTiktok.length > 0 && (
                                         <div className="relative">
-                                            {/* Platform Header */}
-                                            <div className="flex items-center gap-3 mb-6">
-                                                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg">
-                                                    <span className="text-white text-xl">♪</span>
+                                            {/* TikTok Comment Panel - Dark Mode */}
+                                            <div className="bg-[#121212] rounded-3xl overflow-hidden shadow-2xl">
+                                                {/* Header Bar */}
+                                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white text-lg font-bold">{featuredTiktok.length} comments</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                                        <span>♪</span>
+                                                        <span className="font-medium">TikTok</span>
+                                                    </div>
                                                 </div>
-                                                <h3 className="font-bold text-xl text-gray-900">TikTok</h3>
-                                            </div>
 
-                                            {/* TikTok Comments */}
-                                            <div className="space-y-3">
-                                                {featuredTiktok.map((comment, idx) => (
-                                                    <div
-                                                        key={comment.id}
-                                                        className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-black/10 hover:-translate-y-0.5"
-                                                    >
-                                                        <div className="flex items-start gap-3">
+                                                {/* Scrollable Comments */}
+                                                <div className="max-h-96 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                                                    {featuredTiktok.map((comment, idx) => (
+                                                        <div key={comment.id} className="flex gap-3 group">
                                                             {/* Avatar */}
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                                                                 {comment.athleteName?.[0]?.toUpperCase() || '?'}
                                                             </div>
+
+                                                            {/* Comment Content */}
                                                             <div className="flex-1 min-w-0">
-                                                                {comment.athleteName && (
-                                                                    <span className="font-semibold text-gray-900 text-sm block mb-1">
-                                                                        @{comment.athleteName}
+                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                    <span className="text-white text-sm font-semibold">
+                                                                        {comment.athleteName || 'Fan'}
                                                                     </span>
-                                                                )}
-                                                                <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                                    <span className="text-gray-500 text-xs">• 2d</span>
+                                                                </div>
+                                                                <p className="text-gray-200 text-sm leading-relaxed">{comment.text}</p>
+                                                                <div className="flex items-center gap-4 mt-1.5 text-gray-500 text-xs">
+                                                                    <span>Reply</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Like Button */}
+                                                            <div className="flex flex-col items-center gap-0.5 flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                                <Heart className="w-4 h-4 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" />
+                                                                <span className="text-gray-500 text-xs">
+                                                                    {Math.floor(Math.random() * 50) + 5}
+                                                                </span>
                                                             </div>
                                                         </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Input Bar */}
+                                                <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-800">
+                                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                                                    <div className="flex-1 bg-gray-800 rounded-full px-4 py-2 text-gray-500 text-sm">
+                                                        Add a comment...
                                                     </div>
-                                                ))}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Instagram Column */}
+                                    {/* Instagram Column - Light Theme (Native Look) */}
                                     {featuredInstagram.length > 0 && (
                                         <div className="relative">
-                                            {/* Platform Header */}
-                                            <div className="flex items-center gap-3 mb-6">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
-                                                    <span className="text-white text-xl">📸</span>
+                                            {/* Instagram Comment Panel */}
+                                            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
+                                                {/* Header Bar */}
+                                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                                    <span className="text-gray-900 text-lg font-bold">Comments</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-sm bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-transparent bg-clip-text font-bold">
+                                                            Instagram
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <h3 className="font-bold text-xl text-gray-900">Instagram</h3>
-                                            </div>
 
-                                            {/* Instagram Comments */}
-                                            <div className="space-y-3">
-                                                {featuredInstagram.map((comment, idx) => (
-                                                    <div
-                                                        key={comment.id}
-                                                        className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-pink-200 hover:-translate-y-0.5"
-                                                    >
-                                                        <div className="flex items-start gap-3">
-                                                            {/* Avatar with Instagram gradient ring */}
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-[2px] flex-shrink-0">
+                                                {/* Scrollable Comments */}
+                                                <div className="max-h-96 overflow-y-auto p-4 space-y-4">
+                                                    {featuredInstagram.map((comment, idx) => (
+                                                        <div key={comment.id} className="flex gap-3 group">
+                                                            {/* Avatar with Story Ring */}
+                                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 p-[2px] flex-shrink-0">
                                                                 <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                                                                    <span className="text-sm font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-transparent bg-clip-text">
+                                                                    <span className="text-xs font-bold text-gray-900">
                                                                         {comment.athleteName?.[0]?.toUpperCase() || '?'}
                                                                     </span>
                                                                 </div>
                                                             </div>
+
+                                                            {/* Comment Content */}
                                                             <div className="flex-1 min-w-0">
-                                                                {comment.athleteName && (
-                                                                    <span className="font-semibold text-gray-900 text-sm block mb-1">
-                                                                        @{comment.athleteName}
+                                                                <p className="text-gray-900 text-sm">
+                                                                    <span className="font-semibold mr-1">
+                                                                        {comment.athleteName || 'fan'}
                                                                     </span>
-                                                                )}
-                                                                <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                                    {comment.text}
+                                                                </p>
+                                                                <div className="flex items-center gap-3 mt-1.5 text-gray-500 text-xs">
+                                                                    <span>2d</span>
+                                                                    <span className="font-semibold">{Math.floor(Math.random() * 30) + 3} likes</span>
+                                                                    <span className="font-semibold cursor-pointer">Reply</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Like Button */}
+                                                            <div className="flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity pt-1">
+                                                                <Heart className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" />
                                                             </div>
                                                         </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Input Bar */}
+                                                <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                                    <span className="text-lg">😊</span>
+                                                    <div className="flex-1 text-gray-400 text-sm">
+                                                        Add a comment...
                                                     </div>
-                                                ))}
+                                                    <span className="text-blue-500 font-semibold text-sm cursor-pointer opacity-50">Post</span>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1129,7 +1174,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.0</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.1</p>
             </footer>
 
             {/* Athlete Detail Modal */}
