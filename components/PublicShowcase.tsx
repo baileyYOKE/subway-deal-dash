@@ -41,11 +41,13 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
     });
 
     // Sub Club Athletes stats (story only)
-    let subClubStoryViews = 0, subClubStoryTaps = 0;
+    let subClubStoryViews = 0, subClubStoryTaps = 0, subClubStoryReplies = 0, subClubStoryShares = 0;
 
     subClubAthletes.forEach(a => {
         subClubStoryViews += a.ig_story_1_views || 0;
         subClubStoryTaps += a.ig_story_1_taps || 0;
+        subClubStoryReplies += a.ig_story_1_replies || 0;
+        subClubStoryShares += a.ig_story_1_shares || 0;
     });
 
     // Totals
@@ -66,7 +68,7 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
         },
         subClub: {
             count: subClubAthletes.length,
-            story: { views: subClubStoryViews, taps: subClubStoryTaps }
+            story: { views: subClubStoryViews, taps: subClubStoryTaps, replies: subClubStoryReplies, shares: subClubStoryShares }
         }
     };
 };
@@ -333,6 +335,20 @@ export const PublicShowcase: React.FC = () => {
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
 
+    // Filter athlete media list for navigation based on carousel filter
+    const filteredAthleteMediaList = useMemo(() => {
+        if (carouselFilter === 'all') return athleteMediaList;
+
+        return athleteMediaList.filter(athlete => {
+            const hasVideo = athlete.media.some(m =>
+                m.mediaType?.toLowerCase() === 'tiktok' ||
+                m.mediaType?.toLowerCase() === 'ig_reel'
+            );
+            if (carouselFilter === 'featured') return hasVideo;
+            return !hasVideo; // subclub = story-only athletes
+        });
+    }, [athleteMediaList, carouselFilter]);
+
     // Handle athlete click - use media lookup to find athlete with signable hashes
     const handleAthleteClick = (athleteImage: AthleteImage) => {
         console.log('[PublicShowcase] Athlete clicked:', athleteImage.firstName, athleteImage.lastName);
@@ -543,6 +559,7 @@ export const PublicShowcase: React.FC = () => {
                                 : 0;
                             const tiktokBenchmark = 2.5;
                             const beatingBenchmark = tiktokEngagement > tiktokBenchmark;
+                            const maxScale = 10; // 0-10% scale
 
                             return (
                                 <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
@@ -577,20 +594,33 @@ export const PublicShowcase: React.FC = () => {
                                                     {tiktokEngagement.toFixed(2)}%
                                                 </span>
                                             </div>
+                                            {/* Stacked bar: red to benchmark, green beyond */}
                                             <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                {/* Red section: 0 to benchmark */}
                                                 <div
-                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
-                                                    style={{ width: `${Math.min((tiktokEngagement / (tiktokBenchmark * 2)) * 100, 100)}%` }}
+                                                    className="absolute left-0 top-0 h-full bg-red-400"
+                                                    style={{ width: `${(tiktokBenchmark / maxScale) * 100}%` }}
                                                 />
+                                                {/* Green section: benchmark to our rate (only when beating) */}
+                                                {beatingBenchmark && (
+                                                    <div
+                                                        className="absolute top-0 h-full bg-emerald-500"
+                                                        style={{
+                                                            left: `${(tiktokBenchmark / maxScale) * 100}%`,
+                                                            width: `${Math.min((tiktokEngagement - tiktokBenchmark) / maxScale * 100, 100 - (tiktokBenchmark / maxScale) * 100)}%`
+                                                        }}
+                                                    />
+                                                )}
+                                                {/* Marker line at our rate */}
                                                 <div
-                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
-                                                    style={{ left: `${(tiktokBenchmark / (tiktokBenchmark * 2)) * 100}%` }}
+                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
+                                                    style={{ left: `${Math.min((tiktokEngagement / maxScale) * 100, 99)}%` }}
                                                 />
                                             </div>
                                             <div className="flex justify-between text-xs mt-1">
                                                 <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Benchmark: {tiktokBenchmark}%</span>
-                                                <span className="text-gray-400">5%</span>
+                                                <span className="text-red-500 font-medium">Industry: {tiktokBenchmark}%</span>
+                                                <span className="text-gray-400">{maxScale}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -605,6 +635,7 @@ export const PublicShowcase: React.FC = () => {
                                 : 0;
                             const reelBenchmark = 0.5;
                             const beatingBenchmark = reelEngagement > reelBenchmark;
+                            const maxScale = 5; // 0-5% scale for reels
 
                             return (
                                 <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
@@ -639,20 +670,33 @@ export const PublicShowcase: React.FC = () => {
                                                     {reelEngagement.toFixed(2)}%
                                                 </span>
                                             </div>
+                                            {/* Stacked bar: red to benchmark, green beyond */}
                                             <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                {/* Red section: 0 to benchmark */}
                                                 <div
-                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
-                                                    style={{ width: `${Math.min((reelEngagement / (reelBenchmark * 4)) * 100, 100)}%` }}
+                                                    className="absolute left-0 top-0 h-full bg-red-400"
+                                                    style={{ width: `${(reelBenchmark / maxScale) * 100}%` }}
                                                 />
+                                                {/* Green section: benchmark to our rate (only when beating) */}
+                                                {beatingBenchmark && (
+                                                    <div
+                                                        className="absolute top-0 h-full bg-emerald-500"
+                                                        style={{
+                                                            left: `${(reelBenchmark / maxScale) * 100}%`,
+                                                            width: `${Math.min((reelEngagement - reelBenchmark) / maxScale * 100, 100 - (reelBenchmark / maxScale) * 100)}%`
+                                                        }}
+                                                    />
+                                                )}
+                                                {/* Marker line at our rate */}
                                                 <div
-                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
-                                                    style={{ left: `${(reelBenchmark / (reelBenchmark * 4)) * 100}%` }}
+                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
+                                                    style={{ left: `${Math.min((reelEngagement / maxScale) * 100, 99)}%` }}
                                                 />
                                             </div>
                                             <div className="flex justify-between text-xs mt-1">
                                                 <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Benchmark: {reelBenchmark}%</span>
-                                                <span className="text-gray-400">2%</span>
+                                                <span className="text-red-500 font-medium">Industry: {reelBenchmark}%</span>
+                                                <span className="text-gray-400">{maxScale}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -662,11 +706,12 @@ export const PublicShowcase: React.FC = () => {
 
                         {/* IG Story */}
                         {(() => {
-                            const storyReachRate = stats.featured.story.views > 0
+                            const storyEngagementRate = stats.featured.story.views > 0
                                 ? (stats.featured.story.taps / stats.featured.story.views) * 100
                                 : 0;
                             const storyBenchmark = 0.6;
-                            const beatingBenchmark = storyReachRate > storyBenchmark;
+                            const beatingBenchmark = storyEngagementRate > storyBenchmark;
+                            const maxScale = 5; // 0-5% scale
 
                             return (
                                 <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
@@ -692,25 +737,38 @@ export const PublicShowcase: React.FC = () => {
                                         </div>
                                         <div className="pt-3 border-t border-gray-100">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-gray-700 font-medium">IG Story Tap Rate</span>
+                                                <span className="text-gray-700 font-medium">IG Story Eng Rate</span>
                                                 <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
-                                                    {storyReachRate.toFixed(2)}%
+                                                    {storyEngagementRate.toFixed(2)}%
                                                 </span>
                                             </div>
+                                            {/* Stacked bar: red to benchmark, green beyond */}
                                             <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                {/* Red section: 0 to benchmark */}
                                                 <div
-                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
-                                                    style={{ width: `${Math.min((storyReachRate / (storyBenchmark * 4)) * 100, 100)}%` }}
+                                                    className="absolute left-0 top-0 h-full bg-red-400"
+                                                    style={{ width: `${(storyBenchmark / maxScale) * 100}%` }}
                                                 />
+                                                {/* Green section: benchmark to our rate (only when beating) */}
+                                                {beatingBenchmark && (
+                                                    <div
+                                                        className="absolute top-0 h-full bg-emerald-500"
+                                                        style={{
+                                                            left: `${(storyBenchmark / maxScale) * 100}%`,
+                                                            width: `${Math.min((storyEngagementRate - storyBenchmark) / maxScale * 100, 100 - (storyBenchmark / maxScale) * 100)}%`
+                                                        }}
+                                                    />
+                                                )}
+                                                {/* Marker line at our rate */}
                                                 <div
-                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
-                                                    style={{ left: `${(storyBenchmark / (storyBenchmark * 4)) * 100}%` }}
+                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
+                                                    style={{ left: `${Math.min((storyEngagementRate / maxScale) * 100, 99)}%` }}
                                                 />
                                             </div>
                                             <div className="flex justify-between text-xs mt-1">
                                                 <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Benchmark: {storyBenchmark}%</span>
-                                                <span className="text-gray-400">2.4%</span>
+                                                <span className="text-red-500 font-medium">Industry: {storyBenchmark}%</span>
+                                                <span className="text-gray-400">{maxScale}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -729,35 +787,95 @@ export const PublicShowcase: React.FC = () => {
             </section>
 
             {/* Sub Club Athletes Breakdown */}
-            <section className="py-12 px-8">
-                <div className="max-w-3xl mx-auto">
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-yellow/20 rounded-full text-orange-600 font-bold mb-3">
-                            <Users className="w-5 h-5" /> Sub Club Athletes
-                        </div>
-                        <p className="text-gray-500">Story creators • 340 athletes</p>
-                    </div>
+            {(() => {
+                const subClubEngagement = stats.subClub.story.views > 0
+                    ? (stats.subClub.story.taps / stats.subClub.story.views) * 100
+                    : 0;
+                const storyBenchmark = 0.6;
+                const beatingBenchmark = subClubEngagement > storyBenchmark;
+                const maxScale = 5;
 
-                    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 max-w-md mx-auto">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">📱</span>
+                return (
+                    <section className="py-12 px-8">
+                        <div className="max-w-3xl mx-auto">
+                            <div className="text-center mb-8">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-yellow/20 rounded-full text-orange-600 font-bold mb-3">
+                                    <Users className="w-5 h-5" /> Sub Club Athletes
+                                </div>
+                                <p className="text-gray-500">Story creators • 340 athletes</p>
                             </div>
-                            <span className="font-bold text-gray-900">IG Stories</span>
+
+                            <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 max-w-md mx-auto ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
+                                        <span className="text-white font-bold text-sm">📱</span>
+                                    </div>
+                                    <span className="font-bold text-gray-900">IG Stories</span>
+                                    {beatingBenchmark && (
+                                        <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                                            🔥 Above Benchmark
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Views</span>
+                                        <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.views)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Link Taps</span>
+                                        <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.taps)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Replies</span>
+                                        <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.replies)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Shares</span>
+                                        <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.shares)}</span>
+                                    </div>
+                                    <div className="pt-3 border-t border-gray-100">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-gray-700 font-medium">IG Story Eng Rate</span>
+                                            <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                                {subClubEngagement.toFixed(2)}%
+                                            </span>
+                                        </div>
+                                        {/* Stacked bar: red to benchmark, green beyond */}
+                                        <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                            {/* Red section: 0 to benchmark */}
+                                            <div
+                                                className="absolute left-0 top-0 h-full bg-red-400"
+                                                style={{ width: `${(storyBenchmark / maxScale) * 100}%` }}
+                                            />
+                                            {/* Green section: benchmark to our rate (only when beating) */}
+                                            {beatingBenchmark && (
+                                                <div
+                                                    className="absolute top-0 h-full bg-emerald-500"
+                                                    style={{
+                                                        left: `${(storyBenchmark / maxScale) * 100}%`,
+                                                        width: `${Math.min((subClubEngagement - storyBenchmark) / maxScale * 100, 100 - (storyBenchmark / maxScale) * 100)}%`
+                                                    }}
+                                                />
+                                            )}
+                                            {/* Marker line at our rate */}
+                                            <div
+                                                className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
+                                                style={{ left: `${Math.min((subClubEngagement / maxScale) * 100, 99)}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between text-xs mt-1">
+                                            <span className="text-gray-400">0%</span>
+                                            <span className="text-red-500 font-medium">Industry: {storyBenchmark}%</span>
+                                            <span className="text-gray-400">{maxScale}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="space-y-3">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Views</span>
-                                <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.views)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Link Taps</span>
-                                <span className="font-bold text-gray-900">{formatNumber(stats.subClub.story.taps)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                    </section>
+                );
+            })()}
 
             {/* Athlete Army Carousel */}
             {enrichedAthleteImages.length > 0 && (() => {
@@ -810,7 +928,7 @@ export const PublicShowcase: React.FC = () => {
                                         <span className={`block w-full h-full rounded-full ${carouselFilter === 'featured' ? 'bg-blue-500' : 'bg-white'
                                             }`}></span>
                                     </span>
-                                    <span className="text-blue-600 font-medium">🎬 Featured Athletes ({enrichedAthleteImages.filter(a => a.isVideoAthlete).length})</span>
+                                    <span className="text-blue-600 font-medium">🎬 Featured Athletes</span>
                                 </button>
 
                                 {/* Sub Club Athletes Bubble - Clickable */}
@@ -828,7 +946,7 @@ export const PublicShowcase: React.FC = () => {
                                         <span className={`block w-full h-full rounded-full ${carouselFilter === 'subclub' ? 'bg-pink-500' : 'bg-white'
                                             }`}></span>
                                     </span>
-                                    <span className="text-pink-600 font-medium">📸 Sub Club Athletes ({enrichedAthleteImages.filter(a => !a.isVideoAthlete).length})</span>
+                                    <span className="text-pink-600 font-medium">📸 Sub Club Athletes</span>
                                 </button>
                             </div>
                             {carouselFilter !== 'all' && (
@@ -962,7 +1080,7 @@ export const PublicShowcase: React.FC = () => {
                                                         <span className="text-sm font-bold text-gray-700 w-16">{cohort?.reachRate.toFixed(1)}%</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-gray-500 w-24">IG Story Rate</span>
+                                                        <span className="text-xs text-gray-500 w-24">IG Story Eng Rate</span>
                                                         <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
                                                             <div
                                                                 className={`h-full bg-gradient-to-r ${cohort?.color} rounded-full transition-all opacity-70`}
@@ -1174,7 +1292,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.2</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.3</p>
             </footer>
 
             {/* Athlete Detail Modal */}
@@ -1192,7 +1310,7 @@ export const PublicShowcase: React.FC = () => {
                 selectedMediaAthlete && (
                     <AthleteMediaModal
                         athlete={selectedMediaAthlete}
-                        allAthletes={athleteMediaList}
+                        allAthletes={filteredAthleteMediaList}
                         onClose={() => setSelectedMediaAthlete(null)}
                         onNavigate={(newAthlete) => setSelectedMediaAthlete(newAthlete)}
                     />
