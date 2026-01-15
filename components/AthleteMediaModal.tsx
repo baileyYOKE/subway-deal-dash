@@ -302,25 +302,19 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, allAthletes, onClo
                                 <p className="text-gray-500">{athlete.school}</p>
                             )}
                             <p className="text-gray-500">{athlete.sport}</p>
-                            {athlete.campaign && (
-                                <span className="text-xs px-2 py-0.5 bg-subway-green/10 text-subway-green rounded-full font-medium">
-                                    {athlete.campaign}
+                            {/* Dynamic badge based on media type */}
+                            {athlete.media.some(m => m.mediaType?.toLowerCase() === 'tiktok' || m.mediaType?.toLowerCase() === 'ig_reel') ? (
+                                <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
+                                    🎬 Featured Athlete
+                                </span>
+                            ) : (
+                                <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-600 rounded-full font-medium">
+                                    📸 Sub Club Athlete
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    {/* Navigation hint */}
-                    {allAthletes && allAthletes.length > 1 && (
-                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
-                            <span className="px-2 py-1 bg-gray-100 rounded">←</span>
-                            <span className="px-2 py-1 bg-gray-100 rounded">→</span>
-                            <span>to navigate athletes</span>
-                            <span className="ml-4">
-                                {currentIndex + 1} of {allAthletes.length}
-                            </span>
-                        </div>
-                    )}
                 </div>
 
                 {/* Media Content */}

@@ -559,6 +559,7 @@ export const PublicShowcase: React.FC = () => {
                                 : 0;
                             const tiktokBenchmark = 2.5;
                             const beatingBenchmark = tiktokEngagement > tiktokBenchmark;
+                            const multiplier = tiktokEngagement / tiktokBenchmark;
                             const maxScale = 10; // 0-10% scale
 
                             return (
@@ -611,16 +612,12 @@ export const PublicShowcase: React.FC = () => {
                                                         }}
                                                     />
                                                 )}
-                                                {/* Marker line at our rate */}
-                                                <div
-                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
-                                                    style={{ left: `${Math.min((tiktokEngagement / maxScale) * 100, 99)}%` }}
-                                                />
                                             </div>
-                                            <div className="flex justify-between text-xs mt-1">
-                                                <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Industry: {tiktokBenchmark}%</span>
-                                                <span className="text-gray-400">{maxScale}%</span>
+                                            <div className="flex justify-between items-center text-xs mt-1">
+                                                <span className="text-gray-400">Industry: {tiktokBenchmark}%</span>
+                                                {beatingBenchmark && (
+                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -635,6 +632,7 @@ export const PublicShowcase: React.FC = () => {
                                 : 0;
                             const reelBenchmark = 0.5;
                             const beatingBenchmark = reelEngagement > reelBenchmark;
+                            const multiplier = reelEngagement / reelBenchmark;
                             const maxScale = 5; // 0-5% scale for reels
 
                             return (
@@ -687,16 +685,12 @@ export const PublicShowcase: React.FC = () => {
                                                         }}
                                                     />
                                                 )}
-                                                {/* Marker line at our rate */}
-                                                <div
-                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
-                                                    style={{ left: `${Math.min((reelEngagement / maxScale) * 100, 99)}%` }}
-                                                />
                                             </div>
-                                            <div className="flex justify-between text-xs mt-1">
-                                                <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Industry: {reelBenchmark}%</span>
-                                                <span className="text-gray-400">{maxScale}%</span>
+                                            <div className="flex justify-between items-center text-xs mt-1">
+                                                <span className="text-gray-400">Industry: {reelBenchmark}%</span>
+                                                {beatingBenchmark && (
+                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -711,6 +705,7 @@ export const PublicShowcase: React.FC = () => {
                                 : 0;
                             const storyBenchmark = 0.6;
                             const beatingBenchmark = storyEngagementRate > storyBenchmark;
+                            const multiplier = storyEngagementRate / storyBenchmark;
                             const maxScale = 5; // 0-5% scale
 
                             return (
@@ -759,16 +754,12 @@ export const PublicShowcase: React.FC = () => {
                                                         }}
                                                     />
                                                 )}
-                                                {/* Marker line at our rate */}
-                                                <div
-                                                    className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
-                                                    style={{ left: `${Math.min((storyEngagementRate / maxScale) * 100, 99)}%` }}
-                                                />
                                             </div>
-                                            <div className="flex justify-between text-xs mt-1">
-                                                <span className="text-gray-400">0%</span>
-                                                <span className="text-red-500 font-medium">Industry: {storyBenchmark}%</span>
-                                                <span className="text-gray-400">{maxScale}%</span>
+                                            <div className="flex justify-between items-center text-xs mt-1">
+                                                <span className="text-gray-400">Industry: {storyBenchmark}%</span>
+                                                {beatingBenchmark && (
+                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -793,6 +784,7 @@ export const PublicShowcase: React.FC = () => {
                     : 0;
                 const storyBenchmark = 0.6;
                 const beatingBenchmark = subClubEngagement > storyBenchmark;
+                const multiplier = subClubEngagement / storyBenchmark;
                 const maxScale = 5;
 
                 return (
@@ -858,16 +850,12 @@ export const PublicShowcase: React.FC = () => {
                                                     }}
                                                 />
                                             )}
-                                            {/* Marker line at our rate */}
-                                            <div
-                                                className="absolute top-0 h-full w-1 bg-gray-800 border-l border-r border-white"
-                                                style={{ left: `${Math.min((subClubEngagement / maxScale) * 100, 99)}%` }}
-                                            />
                                         </div>
-                                        <div className="flex justify-between text-xs mt-1">
-                                            <span className="text-gray-400">0%</span>
-                                            <span className="text-red-500 font-medium">Industry: {storyBenchmark}%</span>
-                                            <span className="text-gray-400">{maxScale}%</span>
+                                        <div className="flex justify-between items-center text-xs mt-1">
+                                            <span className="text-gray-400">Industry: {storyBenchmark}%</span>
+                                            {beatingBenchmark && (
+                                                <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1081,10 +1069,16 @@ export const PublicShowcase: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs text-gray-500 w-24">IG Story Eng Rate</span>
-                                                        <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden relative">
                                                             <div
                                                                 className={`h-full bg-gradient-to-r ${cohort?.color} rounded-full transition-all opacity-70`}
                                                                 style={{ width: `${((cohort?.engagementRate || 0) / maxEngagement) * 100}%` }}
+                                                            />
+                                                            {/* Benchmark indicator at 0.6% */}
+                                                            <div
+                                                                className="absolute top-0 h-full w-0.5 bg-red-500"
+                                                                style={{ left: `${(0.6 / maxEngagement) * 100}%` }}
+                                                                title="Industry Benchmark: 0.6%"
                                                             />
                                                         </div>
                                                         <span className="text-sm font-bold text-gray-700 w-16">{cohort?.engagementRate.toFixed(2)}%</span>
@@ -1092,6 +1086,11 @@ export const PublicShowcase: React.FC = () => {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                    {/* Benchmark Legend */}
+                                    <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500">
+                                        <div className="w-0.5 h-4 bg-red-500"></div>
+                                        <span>Industry Benchmark: 0.6%</span>
                                     </div>
                                 </div>
                                 <div className="p-4 bg-emerald-50 border-t border-emerald-100">
@@ -1198,9 +1197,6 @@ export const PublicShowcase: React.FC = () => {
                                                             {/* Like Button */}
                                                             <div className="flex flex-col items-center gap-0.5 flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
                                                                 <Heart className="w-4 h-4 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" />
-                                                                <span className="text-gray-500 text-xs">
-                                                                    {Math.floor(Math.random() * 50) + 5}
-                                                                </span>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1255,7 +1251,6 @@ export const PublicShowcase: React.FC = () => {
                                                                 </p>
                                                                 <div className="flex items-center gap-3 mt-1.5 text-gray-500 text-xs">
                                                                     <span>2d</span>
-                                                                    <span className="font-semibold">{Math.floor(Math.random() * 30) + 3} likes</span>
                                                                     <span className="font-semibold cursor-pointer">Reply</span>
                                                                 </div>
                                                             </div>
@@ -1292,7 +1287,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.3</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.4</p>
             </footer>
 
             {/* Athlete Detail Modal */}
