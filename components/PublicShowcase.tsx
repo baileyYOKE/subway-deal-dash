@@ -340,12 +340,11 @@ export const PublicShowcase: React.FC = () => {
         if (carouselFilter === 'all') return athleteMediaList;
 
         return athleteMediaList.filter(athlete => {
-            const hasVideo = athlete.media.some(m =>
-                m.mediaType?.toLowerCase() === 'tiktok' ||
-                m.mediaType?.toLowerCase() === 'ig_reel'
-            );
-            if (carouselFilter === 'featured') return hasVideo;
-            return !hasVideo; // subclub = story-only athletes
+            // Featured = Complete Partnership campaign (85 athletes)
+            // SubClub = all others (340 athletes)
+            const isFeatured = athlete.campaign === 'Complete Partnership';
+            if (carouselFilter === 'featured') return isFeatured;
+            return !isFeatured; // subclub = non-Complete Partnership athletes
         });
     }, [athleteMediaList, carouselFilter]);
 
@@ -706,7 +705,7 @@ export const PublicShowcase: React.FC = () => {
                             const storyBenchmark = 0.6;
                             const beatingBenchmark = storyEngagementRate > storyBenchmark;
                             const multiplier = storyEngagementRate / storyBenchmark;
-                            const maxScale = 5; // 0-5% scale
+                            const maxScale = 2; // 0-2% scale for better visual impact
 
                             return (
                                 <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
@@ -785,7 +784,7 @@ export const PublicShowcase: React.FC = () => {
                 const storyBenchmark = 0.6;
                 const beatingBenchmark = subClubEngagement > storyBenchmark;
                 const multiplier = subClubEngagement / storyBenchmark;
-                const maxScale = 5;
+                const maxScale = 2; // 0-2% scale for better visual impact
 
                 return (
                     <section className="py-12 px-8">
@@ -1098,6 +1097,7 @@ export const PublicShowcase: React.FC = () => {
                                         <Star className="w-4 h-4 inline mr-1" />
                                         <strong>Key Takeaway:</strong> Athletes with under 1K followers deliver the highest IG Story reach
                                         and engagement rates, making them ideal partners for authentic brand storytelling.
+                                        All athlete cohorts exceed industry benchmarks, demonstrating highly engaged followings across the board.
                                     </p>
                                     <p className="text-xs text-gray-400 text-center mt-2">
                                         Industry benchmark: 0.6% (Socialinsider 2025)
@@ -1287,7 +1287,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.4</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.5</p>
             </footer>
 
             {/* Athlete Detail Modal */}

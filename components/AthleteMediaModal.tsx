@@ -302,8 +302,9 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, allAthletes, onClo
                                 <p className="text-gray-500">{athlete.school}</p>
                             )}
                             <p className="text-gray-500">{athlete.sport}</p>
-                            {/* Dynamic badge based on media type */}
-                            {athlete.media.some(m => m.mediaType?.toLowerCase() === 'tiktok' || m.mediaType?.toLowerCase() === 'ig_reel') ? (
+                            {/* Dynamic badge based on campaign type (not media type) */}
+                            {/* Complete Partnership = Featured Athlete (85), others = Sub Club (340) */}
+                            {athlete.campaign === 'Complete Partnership' ? (
                                 <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
                                     🎬 Featured Athlete
                                 </span>
