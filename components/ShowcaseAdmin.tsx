@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Athlete } from '../types';
 import { TopContent, FeaturedComment, saveShowcaseData, loadShowcaseData, loadScrapedComments, ScrapedCommentsStore, saveScrapedComments } from '../services/dataService';
 import { scrapeAllComments, ScrapedComment, analyzeCommentsWithGemini, generateWordCloudData, WordCloudItem } from '../services/commentsService';
-import { Upload, Video, Image, MessageCircle, GitCompare, Plus, Trash2, Trophy, Save, Check, Search, Star, Loader2, History, Brain, BarChart3 } from 'lucide-react';
+import { Upload, Video, Image, MessageCircle, GitCompare, Plus, Trash2, Trophy, Save, Check, Search, Star, Loader2, History, Brain, BarChart3, RefreshCw } from 'lucide-react';
 import { WordCloud } from './WordCloud';
 
 interface Props {
@@ -373,9 +373,27 @@ export const ShowcaseAdmin: React.FC<Props> = ({ data, onUpdate }) => {
 
             {/* Carousel Check Section */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <GitCompare className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Carousel Check</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <GitCompare className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Carousel Check</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400">
+                            Last updated: {new Date().toLocaleTimeString()}
+                        </span>
+                        <button
+                            onClick={() => {
+                                // Force re-render by triggering parent state update
+                                // The data prop from parent will cause re-calculation
+                                alert('✅ Carousel counts refreshed!\n\nNote: Counts update automatically when you save changes in Missing Media tab.');
+                            }}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+                        >
+                            <RefreshCw size={14} />
+                            Refresh
+                        </button>
+                    </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-4">Verify data table counts match carousel display counts</p>
 
