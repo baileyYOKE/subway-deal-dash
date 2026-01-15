@@ -283,37 +283,52 @@ export const PublicShowcase: React.FC = () => {
 
     const stats = calculateDetailedStats(data);
     // Combine scraped comments from TikTok and IG, dedupe by text, sort by likes
-    const allComments = useMemo(() => {
+    // Keep TikTok and Instagram separate for the split layout
+    const { tiktokComments, instagramComments } = useMemo(() => {
         const ttComments = (scrapedData?.tiktok || []).map(c => ({
             id: c.id || Math.random().toString(36).substr(2, 9),
             text: c.text,
             platform: 'tiktok' as const,
             athleteName: c.athleteName || c.username || '',
-            likes: c.likes || 0
+            username: c.username || '',
+            likes: c.likes || 0,
+            profilePicUrl: c.profilePicUrl || ''
         }));
         const igComments = (scrapedData?.instagram || []).map(c => ({
             id: c.id || Math.random().toString(36).substr(2, 9),
             text: c.text,
             platform: 'instagram' as const,
             athleteName: c.athleteName || c.username || '',
-            likes: c.likes || 0
+            username: c.username || '',
+            likes: c.likes || 0,
+            profilePicUrl: c.profilePicUrl || ''
         }));
 
-        // Combine and dedupe by text
-        const all = [...ttComments, ...igComments];
-        const seen = new Set();
-        const dedupedComments = all.filter(c => {
-            const key = c.text?.toLowerCase().trim();
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
+        // Dedupe by text for each platform
+        const dedupeByText = (comments: typeof ttComments) => {
+            const seen = new Set();
+            return comments.filter(c => {
+                const key = c.text?.toLowerCase().trim();
+                if (!key || seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        };
 
-        // Sort by likes (highest first) and return top 12
-        return dedupedComments
-            .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-            .slice(0, 12);
+        // Sort by likes desc
+        const sortedTT = dedupeByText(ttComments).sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        const sortedIG = dedupeByText(igComments).sort((a, b) => (b.likes || 0) - (a.likes || 0));
+
+        return {
+            tiktokComments: sortedTT,
+            instagramComments: sortedIG
+        };
     }, [scrapedData]);
+
+    // Combined for legacy usage
+    const allComments = useMemo(() => {
+        return [...tiktokComments, ...instagramComments].slice(0, 12);
+    }, [tiktokComments, instagramComments]);
 
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
@@ -823,25 +838,120 @@ export const PublicShowcase: React.FC = () => {
 
 
 
-            {/* Fan Comments */}
-            {allComments.length > 0 && (
-                <section className="py-16 px-8">
-                    <div className="max-w-4xl mx-auto">
+
+
+            {/* Fan Comments - Stunning Split Design */}
+            {(tiktokComments.length > 0 || instagramComments.length > 0) && (
+                <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+                    <div className="max-w-7xl mx-auto">
+                        {/* Header */}
                         <div className="text-center mb-12">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-100 rounded-full text-pink-600 font-bold mb-4">
-                                <Heart className="w-5 h-5" /> Real Love
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full text-pink-600 font-bold mb-4">
+                                <Heart className="w-5 h-5 fill-pink-500" /> What Fans Are Saying
                             </div>
-                            <h2 className="text-4xl font-black text-gray-900 mb-3">Featured Comments</h2>
-                            <p className="text-gray-500 text-lg">Authentic reactions from real fans</p>
+                            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">Real Comments</h2>
+                            <p className="text-gray-500 text-lg">Authentic reactions from {tiktokComments.length + instagramComments.length}+ fans</p>
                         </div>
-                        <div className="space-y-4">
-                            {allComments.slice(0, 8).map(comment => (
-                                <CommentCard
-                                    key={comment.id}
-                                    comment={comment}
-                                    platform={comment.platform as 'tiktok' | 'instagram'}
-                                />
-                            ))}
+
+                        {/* Split Layout - TikTok Left, Instagram Right */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* TikTok Column */}
+                            <div className="relative">
+                                {/* Platform Header */}
+                                <div className="flex items-center gap-3 mb-6 sticky top-0 bg-gray-50/80 backdrop-blur-sm py-3 z-10">
+                                    <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg">
+                                        <span className="text-white text-xl">♪</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-xl text-gray-900">TikTok</h3>
+                                        <p className="text-sm text-gray-500">{tiktokComments.length} comments</p>
+                                    </div>
+                                </div>
+
+                                {/* TikTok Comments Scroll Container */}
+                                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    {tiktokComments.slice(0, 50).map((comment, idx) => (
+                                        <div
+                                            key={comment.id}
+                                            className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-black/10 hover:-translate-y-0.5"
+                                            style={{ animationDelay: `${idx * 50}ms` }}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                {/* Avatar */}
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                                                    {comment.profilePicUrl ? (
+                                                        <img src={comment.profilePicUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = ''; e.currentTarget.className = 'hidden'; }} />
+                                                    ) : (
+                                                        comment.username?.[0]?.toUpperCase() || '?'
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-semibold text-gray-900 truncate text-sm">@{comment.username || 'fan'}</span>
+                                                        {comment.likes > 0 && (
+                                                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                                                                <Heart className="w-3 h-3" /> {comment.likes}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Instagram Column */}
+                            <div className="relative">
+                                {/* Platform Header */}
+                                <div className="flex items-center gap-3 mb-6 sticky top-0 bg-gray-50/80 backdrop-blur-sm py-3 z-10">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
+                                        <span className="text-white text-xl">📸</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-xl text-gray-900">Instagram</h3>
+                                        <p className="text-sm text-gray-500">{instagramComments.length} comments</p>
+                                    </div>
+                                </div>
+
+                                {/* Instagram Comments Scroll Container */}
+                                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    {instagramComments.slice(0, 50).map((comment, idx) => (
+                                        <div
+                                            key={comment.id}
+                                            className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-pink-200 hover:-translate-y-0.5"
+                                            style={{ animationDelay: `${idx * 50}ms` }}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                {/* Avatar with Instagram gradient ring */}
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-[2px] flex-shrink-0">
+                                                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                                                        {comment.profilePicUrl ? (
+                                                            <img src={comment.profilePicUrl} alt="" className="w-full h-full object-cover rounded-full" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                                        ) : (
+                                                            <span className="text-sm font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-transparent bg-clip-text">
+                                                                {comment.username?.[0]?.toUpperCase() || '?'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-semibold text-gray-900 truncate text-sm">@{comment.username || 'fan'}</span>
+                                                        {comment.likes > 0 && (
+                                                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                                                                <Heart className="w-3 h-3 fill-red-500 text-red-500" /> {comment.likes}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -853,7 +963,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.1.9</p>
+                <p className="text-xs text-gray-400 mt-2">v1.2.0</p>
             </footer>
 
             {/* Athlete Detail Modal */}
