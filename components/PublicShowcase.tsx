@@ -17,12 +17,11 @@ const calculateDetailedStats = (athletes: Athlete[]) => {
     // Featured Athletes = those with TikTok OR IG Reel (they do video + story)
     const featuredAthletes = realAthletes.filter(a => (a.tiktok_views || 0) > 0 || (a.ig_reel_views || 0) > 0);
 
-    // Sub Club Athletes = those with ONLY story (no video) AND in baseline CSV
+    // Sub Club Athletes = those with ONLY story (no video)
     const subClubAthletes = realAthletes.filter(a =>
         (a.tiktok_views || 0) === 0 &&
         (a.ig_reel_views || 0) === 0 &&
-        (a.ig_story_1_views || 0) > 0 &&
-        isBaselineAthlete(a.user_name)  // Only include athletes from baseline CSV
+        (a.ig_story_1_views || 0) > 0
     );
 
     // Featured Athletes stats by platform
@@ -949,7 +948,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.2.2</p>
+                <p className="text-xs text-gray-400 mt-2">v1.2.3</p>
             </footer>
 
             {/* Athlete Detail Modal */}
