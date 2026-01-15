@@ -318,55 +318,24 @@ export const PublicShowcase: React.FC = () => {
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
 
-    // Handle athlete click - ALWAYS shows content modal with direct S3 URL
+    // Handle athlete click - use media lookup to find athlete with signable hashes
     const handleAthleteClick = (athleteImage: AthleteImage) => {
         console.log('[PublicShowcase] Athlete clicked:', athleteImage.firstName, athleteImage.lastName);
-        const athlete = athleteImage.athlete;
 
-        if (!athlete) {
-            console.log('[PublicShowcase] No athlete data attached');
-            return;
+        // Look up athlete in the media list (which has proper hashes for the API)
+        const nameKey = `${athleteImage.firstName}-${athleteImage.lastName}`.toLowerCase();
+        const mediaAthlete = athleteMediaLookup.get(nameKey);
+
+        if (mediaAthlete && mediaAthlete.media.length > 0) {
+            console.log('[PublicShowcase] Found athlete in media lookup with', mediaAthlete.media.length, 'media items');
+            setSelectedMediaAthlete(mediaAthlete);
+        } else {
+            console.log('[PublicShowcase] Athlete not in media lookup, showing detail modal');
+            // Fallback to detail modal if no media
+            if (athleteImage.athlete) {
+                setSelectedAthlete(athleteImage.athlete);
+            }
         }
-
-        // Get content URL - prioritize video, then image
-        let contentUrl = '';
-        let isVideo = false;
-
-        if (athlete.content_video_url && athlete.content_video_url.startsWith('http')) {
-            contentUrl = athlete.content_video_url;
-            isVideo = true;
-        } else if (athlete.content_image_url && athlete.content_image_url.startsWith('http')) {
-            contentUrl = athlete.content_image_url;
-            isVideo = false;
-        }
-
-        console.log('[PublicShowcase] Content URL:', contentUrl, 'isVideo:', isVideo);
-
-        if (!contentUrl) {
-            console.log('[PublicShowcase] No content URL available');
-            // Fallback to detail modal
-            setSelectedAthlete(athlete);
-            return;
-        }
-
-        // Create athlete object with direct S3 URL encoded in hash
-        const contentAthlete: AthleteListItem = {
-            firstName: athleteImage.firstName,
-            lastName: athleteImage.lastName,
-            sport: athleteImage.sport || '',
-            campaign: athlete.campaign_type === 'video' ? 'Featured Athlete' : 'Sub Club',
-            school: athleteImage.schoolName || '',
-            media: [{
-                hash: isVideo ? `direct-video:${contentUrl}` : `direct:${contentUrl}`,
-                mediaType: athlete.campaign_type === 'video' ? 'ig_reel' : 'ig_story',
-                instagramPermalink: '', // Stories expired, no link
-                hasVideo: isVideo,
-                hasImage: !isVideo
-            }]
-        };
-
-        console.log('[PublicShowcase] Opening modal with direct URL');
-        setSelectedMediaAthlete(contentAthlete);
     };
 
 
