@@ -238,14 +238,18 @@ export const PublicShowcase: React.FC = () => {
                 loadDataFromCloud(),
                 loadShowcaseData(),
                 loadScrapedComments(),
-                fetch('/subway_deal_with_images.csv').then(r => r.text()).catch(() => ''),
                 loadAthleteList()
-            ]).then(([athleteResult, showcaseResult, scrapedResult, csvText, mediaList]) => {
-                if (athleteResult.athletes) setData(athleteResult.athletes);
+            ]).then(([athleteResult, showcaseResult, scrapedResult, mediaList]) => {
+                if (athleteResult.athletes) {
+                    setData(athleteResult.athletes);
+                    // Use Firestore data for carousel (with athlete objects attached)
+                    const carouselAthletes = athletesToCarouselImages(athleteResult.athletes);
+                    console.log('[PublicShowcase] Carousel athletes:', carouselAthletes.length, 'video:', carouselAthletes.filter(a => a.isVideoAthlete).length);
+                    setAthleteImages(carouselAthletes);
+                }
                 setTopContent(showcaseResult.topContent);
                 setFeaturedComments(showcaseResult.featuredComments);
                 setScrapedData(scrapedResult);
-                if (csvText) setAthleteImages(parseAthleteImageCSV(csvText));
                 setAthleteMediaList(mediaList);
                 setLoading(false);
             });
