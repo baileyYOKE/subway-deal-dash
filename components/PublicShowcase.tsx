@@ -225,6 +225,7 @@ export const PublicShowcase: React.FC = () => {
     const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
     const [athleteMediaList, setAthleteMediaList] = useState<AthleteListItem[]>([]);
     const [selectedMediaAthlete, setSelectedMediaAthlete] = useState<AthleteListItem | null>(null);
+    const [carouselFilter, setCarouselFilter] = useState<'all' | 'featured' | 'subclub'>('all');
 
     useEffect(() => {
         // Check localStorage first
@@ -536,72 +537,193 @@ export const PublicShowcase: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* TikTok */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">TT</span>
+                        {(() => {
+                            const tiktokEngagement = stats.featured.tiktok.views > 0
+                                ? ((stats.featured.tiktok.likes + stats.featured.tiktok.comments) / stats.featured.tiktok.views) * 100
+                                : 0;
+                            const tiktokBenchmark = 2.5;
+                            const beatingBenchmark = tiktokEngagement > tiktokBenchmark;
+
+                            return (
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
+                                            <span className="text-white font-bold text-sm">TT</span>
+                                        </div>
+                                        <span className="font-bold text-gray-900">TikTok</span>
+                                        {beatingBenchmark && (
+                                            <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                                                🔥 Above Benchmark
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Views</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.views)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Likes</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.likes)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Comments</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.comments)}</span>
+                                        </div>
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-gray-700 font-medium">Engagement Rate</span>
+                                                <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                                    {tiktokEngagement.toFixed(2)}%
+                                                </span>
+                                            </div>
+                                            <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
+                                                    style={{ width: `${Math.min((tiktokEngagement / (tiktokBenchmark * 2)) * 100, 100)}%` }}
+                                                />
+                                                <div
+                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
+                                                    style={{ left: `${(tiktokBenchmark / (tiktokBenchmark * 2)) * 100}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between text-xs mt-1">
+                                                <span className="text-gray-400">0%</span>
+                                                <span className="text-red-500 font-medium">Benchmark: {tiktokBenchmark}%</span>
+                                                <span className="text-gray-400">5%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-gray-900">TikTok</span>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Views</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.views)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Likes</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.likes)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Comments</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.tiktok.comments)}</span>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         {/* IG Reel */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">IG</span>
+                        {(() => {
+                            const reelEngagement = stats.featured.reel.views > 0
+                                ? ((stats.featured.reel.likes + stats.featured.reel.comments) / stats.featured.reel.views) * 100
+                                : 0;
+                            const reelBenchmark = 0.5;
+                            const beatingBenchmark = reelEngagement > reelBenchmark;
+
+                            return (
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center">
+                                            <span className="text-white font-bold text-sm">IG</span>
+                                        </div>
+                                        <span className="font-bold text-gray-900">IG Reels</span>
+                                        {beatingBenchmark && (
+                                            <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                                                🔥 Above Benchmark
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Views</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.views)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Likes</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.likes)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Comments</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.comments)}</span>
+                                        </div>
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-gray-700 font-medium">Engagement Rate</span>
+                                                <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                                    {reelEngagement.toFixed(2)}%
+                                                </span>
+                                            </div>
+                                            <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
+                                                    style={{ width: `${Math.min((reelEngagement / (reelBenchmark * 4)) * 100, 100)}%` }}
+                                                />
+                                                <div
+                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
+                                                    style={{ left: `${(reelBenchmark / (reelBenchmark * 4)) * 100}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between text-xs mt-1">
+                                                <span className="text-gray-400">0%</span>
+                                                <span className="text-red-500 font-medium">Benchmark: {reelBenchmark}%</span>
+                                                <span className="text-gray-400">2%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-gray-900">IG Reels</span>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Views</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.views)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Likes</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.likes)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Comments</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.reel.comments)}</span>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         {/* IG Story */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">📱</span>
+                        {(() => {
+                            const storyReachRate = stats.featured.story.views > 0
+                                ? (stats.featured.story.taps / stats.featured.story.views) * 100
+                                : 0;
+                            const storyBenchmark = 0.6;
+                            const beatingBenchmark = storyReachRate > storyBenchmark;
+
+                            return (
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
+                                            <span className="text-white font-bold text-sm">📱</span>
+                                        </div>
+                                        <span className="font-bold text-gray-900">IG Stories</span>
+                                        {beatingBenchmark && (
+                                            <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                                                🔥 Above Benchmark
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Views</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.views)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Link Taps</span>
+                                            <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.taps)}</span>
+                                        </div>
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-gray-700 font-medium">IG Story Tap Rate</span>
+                                                <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                                    {storyReachRate.toFixed(2)}%
+                                                </span>
+                                            </div>
+                                            <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`absolute left-0 top-0 h-full rounded-full ${beatingBenchmark ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}
+                                                    style={{ width: `${Math.min((storyReachRate / (storyBenchmark * 4)) * 100, 100)}%` }}
+                                                />
+                                                <div
+                                                    className="absolute top-0 h-full w-0.5 bg-red-500"
+                                                    style={{ left: `${(storyBenchmark / (storyBenchmark * 4)) * 100}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between text-xs mt-1">
+                                                <span className="text-gray-400">0%</span>
+                                                <span className="text-red-500 font-medium">Benchmark: {storyBenchmark}%</span>
+                                                <span className="text-gray-400">2.4%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-gray-900">IG Stories</span>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Views</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.views)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Link Taps</span>
-                                    <span className="font-bold text-gray-900">{formatNumber(stats.featured.story.taps)}</span>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
+                    </div>
+
+                    {/* Benchmark Source Citation */}
+                    <div className="mt-6 text-center">
+                        <p className="text-xs text-gray-400">
+                            Industry benchmarks sourced from Socialinsider 2025 Social Media Benchmarks
+                        </p>
                     </div>
                 </div>
             </section>
@@ -638,40 +760,91 @@ export const PublicShowcase: React.FC = () => {
             </section>
 
             {/* Athlete Army Carousel */}
-            {enrichedAthleteImages.length > 0 && (
-                <section className="py-16 relative">
-                    <div className="max-w-7xl mx-auto px-4 mb-8">
-                        <div className="flex items-center justify-center gap-3 mb-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-subway-green to-subway-yellow rounded-xl flex items-center justify-center shadow-lg">
-                                <Users className="w-6 h-6 text-white" />
+            {enrichedAthleteImages.length > 0 && (() => {
+                // Filter athletes based on selection
+                const filteredAthletes = carouselFilter === 'all'
+                    ? enrichedAthleteImages
+                    : carouselFilter === 'featured'
+                        ? enrichedAthleteImages.filter(a => a.isVideoAthlete)
+                        : enrichedAthleteImages.filter(a => !a.isVideoAthlete);
+
+                // Handle bubble click
+                const handleFilterClick = (type: 'featured' | 'subclub') => {
+                    if (carouselFilter === type) {
+                        // Clicking the same filter again shows all
+                        setCarouselFilter('all');
+                    } else if (carouselFilter !== 'all') {
+                        // Clicking a different filter when one is active shows all
+                        setCarouselFilter('all');
+                    } else {
+                        // Clicking a filter when showing all filters to that type
+                        setCarouselFilter(type);
+                    }
+                };
+
+                return (
+                    <section className="py-16 relative">
+                        <div className="max-w-7xl mx-auto px-4 mb-8">
+                            <div className="flex items-center justify-center gap-3 mb-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-subway-green to-subway-yellow rounded-xl flex items-center justify-center shadow-lg">
+                                    <Users className="w-6 h-6 text-white" />
+                                </div>
+                                <h2 className="text-4xl font-black text-gray-900">The Athlete Army</h2>
                             </div>
-                            <h2 className="text-4xl font-black text-gray-900">The Athlete Army</h2>
+                            <p className="text-gray-500 text-center text-lg">
+                                Click any athlete to view their campaign content
+                            </p>
+                            <div className="flex items-center justify-center gap-6 mt-3 text-sm">
+                                {/* Featured Athletes Bubble - Clickable */}
+                                <button
+                                    onClick={() => handleFilterClick('featured')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${carouselFilter === 'featured'
+                                        ? 'bg-blue-100 ring-2 ring-blue-400 shadow-lg'
+                                        : carouselFilter === 'all'
+                                            ? 'hover:bg-blue-50'
+                                            : 'opacity-50'
+                                        }`}
+                                >
+                                    <span className={`w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500 p-[2px] ${carouselFilter === 'featured' ? 'ring-2 ring-blue-400' : ''
+                                        }`}>
+                                        <span className={`block w-full h-full rounded-full ${carouselFilter === 'featured' ? 'bg-blue-500' : 'bg-white'
+                                            }`}></span>
+                                    </span>
+                                    <span className="text-blue-600 font-medium">🎬 Featured Athletes ({enrichedAthleteImages.filter(a => a.isVideoAthlete).length})</span>
+                                </button>
+
+                                {/* Sub Club Athletes Bubble - Clickable */}
+                                <button
+                                    onClick={() => handleFilterClick('subclub')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${carouselFilter === 'subclub'
+                                        ? 'bg-pink-100 ring-2 ring-pink-400 shadow-lg'
+                                        : carouselFilter === 'all'
+                                            ? 'hover:bg-pink-50'
+                                            : 'opacity-50'
+                                        }`}
+                                >
+                                    <span className={`w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px] ${carouselFilter === 'subclub' ? 'ring-2 ring-pink-400' : ''
+                                        }`}>
+                                        <span className={`block w-full h-full rounded-full ${carouselFilter === 'subclub' ? 'bg-pink-500' : 'bg-white'
+                                            }`}></span>
+                                    </span>
+                                    <span className="text-pink-600 font-medium">📸 Sub Club Athletes ({enrichedAthleteImages.filter(a => !a.isVideoAthlete).length})</span>
+                                </button>
+                            </div>
+                            {carouselFilter !== 'all' && (
+                                <p className="text-center text-xs text-gray-400 mt-2">
+                                    Click either bubble to show all athletes
+                                </p>
+                            )}
                         </div>
-                        <p className="text-gray-500 text-center text-lg">
-                            Click any athlete to view their campaign content
-                        </p>
-                        <div className="flex items-center justify-center gap-6 mt-3 text-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500 p-[2px]">
-                                    <span className="block w-full h-full rounded-full bg-white"></span>
-                                </span>
-                                <span className="text-blue-600">🎬 Featured Athletes</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
-                                    <span className="block w-full h-full rounded-full bg-white"></span>
-                                </span>
-                                <span className="text-pink-600">📸 Sub Club Athletes</span>
-                            </div>
-                        </div>
-                    </div>
-                    <AthleteCarousel
-                        athletes={enrichedAthleteImages}
-                        onAthleteClick={handleAthleteClick}
-                        paused={selectedMediaAthlete !== null || selectedAthlete !== null}
-                    />
-                </section>
-            )}
+                        <AthleteCarousel
+                            athletes={filteredAthletes}
+                            onAthleteClick={handleAthleteClick}
+                            paused={selectedMediaAthlete !== null || selectedAthlete !== null}
+                        />
+                    </section>
+                );
+            })()}
 
             {/* Follower Insights - Story Campaign Analytics */}
             {data.filter(a => a.campaign_type === 'story' && (a.ig_followers || 0) > 0).length > 0 && (() => {
@@ -755,10 +928,11 @@ export const PublicShowcase: React.FC = () => {
                                     <div className="text-3xl font-black text-emerald-600 mb-1">
                                         {cohortData[0]?.engagementRate.toFixed(1)}%
                                     </div>
-                                    <div className="text-sm text-gray-500 mb-2">Engagement Rate (Under 1K)</div>
+                                    <div className="text-sm text-gray-500 mb-2">IG Story Engagement Rate (Under 1K)</div>
                                     <div className="text-xs text-emerald-600 font-medium">
                                         {((cohortData[0]?.engagementRate || 1) / (cohortData[cohortData.length - 1]?.engagementRate || 1)).toFixed(1)}x higher than 10K+ accounts
                                     </div>
+                                    <div className="text-xs text-gray-400 mt-1">Benchmark: 0.6%</div>
                                 </div>
                             </div>
 
@@ -788,7 +962,7 @@ export const PublicShowcase: React.FC = () => {
                                                         <span className="text-sm font-bold text-gray-700 w-16">{cohort?.reachRate.toFixed(1)}%</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-gray-500 w-24">Engagement</span>
+                                                        <span className="text-xs text-gray-500 w-24">IG Story Rate</span>
                                                         <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
                                                             <div
                                                                 className={`h-full bg-gradient-to-r ${cohort?.color} rounded-full transition-all opacity-70`}
@@ -805,8 +979,11 @@ export const PublicShowcase: React.FC = () => {
                                 <div className="p-4 bg-emerald-50 border-t border-emerald-100">
                                     <p className="text-sm text-emerald-700 text-center">
                                         <Star className="w-4 h-4 inline mr-1" />
-                                        <strong>Key Takeaway:</strong> Athletes with under 1K followers deliver the highest reach
+                                        <strong>Key Takeaway:</strong> Athletes with under 1K followers deliver the highest IG Story reach
                                         and engagement rates, making them ideal partners for authentic brand storytelling.
+                                    </p>
+                                    <p className="text-xs text-gray-400 text-center mt-2">
+                                        Industry benchmark: 0.6% (Socialinsider 2025)
                                     </p>
                                 </div>
                             </div>
@@ -816,131 +993,135 @@ export const PublicShowcase: React.FC = () => {
             })()}
 
             {/* Top Content */}
-            {topContent.length > 0 && (
-                <section className="py-16 px-8">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="text-center mb-12">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-yellow/20 rounded-full text-orange-600 font-bold mb-4">
-                                <Zap className="w-5 h-5" /> Top Performers
+            {
+                topContent.length > 0 && (
+                    <section className="py-16 px-8">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="text-center mb-12">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-subway-yellow/20 rounded-full text-orange-600 font-bold mb-4">
+                                    <Zap className="w-5 h-5" /> Top Performers
+                                </div>
+                                <h2 className="text-4xl font-black text-gray-900 mb-3">Viral Moments</h2>
+                                <p className="text-gray-500 text-lg">Our highest-viewed content from this campaign</p>
                             </div>
-                            <h2 className="text-4xl font-black text-gray-900 mb-3">Viral Moments</h2>
-                            <p className="text-gray-500 text-lg">Our highest-viewed content from this campaign</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {topContent.slice(0, 3).map(content => (
+                                    <TopContentCard key={content.id} content={content} />
+                                ))}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {topContent.slice(0, 3).map(content => (
-                                <TopContentCard key={content.id} content={content} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
+                    </section>
+                )
+            }
 
 
 
 
 
             {/* Fan Comments - Featured Only (from Admin) */}
-            {featuredComments.length > 0 && (() => {
-                const featuredTiktok = featuredComments.filter(c => c.platform === 'tiktok');
-                const featuredInstagram = featuredComments.filter(c => c.platform === 'instagram');
-                return (
-                    <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
-                        <div className="max-w-7xl mx-auto">
-                            {/* Header */}
-                            <div className="text-center mb-12">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full text-pink-600 font-bold mb-4">
-                                    <Heart className="w-5 h-5 fill-pink-500" /> What Fans Are Saying
-                                </div>
-                                <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">Real Comments</h2>
-                                <p className="text-gray-500 text-lg">Authentic reactions from real fans</p>
-                            </div>
-
-                            {/* Split Layout - TikTok Left, Instagram Right */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                {/* TikTok Column */}
-                                {featuredTiktok.length > 0 && (
-                                    <div className="relative">
-                                        {/* Platform Header */}
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg">
-                                                <span className="text-white text-xl">♪</span>
-                                            </div>
-                                            <h3 className="font-bold text-xl text-gray-900">TikTok</h3>
-                                        </div>
-
-                                        {/* TikTok Comments */}
-                                        <div className="space-y-3">
-                                            {featuredTiktok.map((comment, idx) => (
-                                                <div
-                                                    key={comment.id}
-                                                    className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-black/10 hover:-translate-y-0.5"
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        {/* Avatar */}
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                                            {comment.athleteName?.[0]?.toUpperCase() || '?'}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            {comment.athleteName && (
-                                                                <span className="font-semibold text-gray-900 text-sm block mb-1">
-                                                                    @{comment.athleteName}
-                                                                </span>
-                                                            )}
-                                                            <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+            {
+                featuredComments.length > 0 && (() => {
+                    const featuredTiktok = featuredComments.filter(c => c.platform === 'tiktok');
+                    const featuredInstagram = featuredComments.filter(c => c.platform === 'instagram');
+                    return (
+                        <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+                            <div className="max-w-7xl mx-auto">
+                                {/* Header */}
+                                <div className="text-center mb-12">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full text-pink-600 font-bold mb-4">
+                                        <Heart className="w-5 h-5 fill-pink-500" /> What Fans Are Saying
                                     </div>
-                                )}
+                                    <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">Real Comments</h2>
+                                    <p className="text-gray-500 text-lg">Authentic reactions from real fans</p>
+                                </div>
 
-                                {/* Instagram Column */}
-                                {featuredInstagram.length > 0 && (
-                                    <div className="relative">
-                                        {/* Platform Header */}
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
-                                                <span className="text-white text-xl">📸</span>
+                                {/* Split Layout - TikTok Left, Instagram Right */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* TikTok Column */}
+                                    {featuredTiktok.length > 0 && (
+                                        <div className="relative">
+                                            {/* Platform Header */}
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg">
+                                                    <span className="text-white text-xl">♪</span>
+                                                </div>
+                                                <h3 className="font-bold text-xl text-gray-900">TikTok</h3>
                                             </div>
-                                            <h3 className="font-bold text-xl text-gray-900">Instagram</h3>
-                                        </div>
 
-                                        {/* Instagram Comments */}
-                                        <div className="space-y-3">
-                                            {featuredInstagram.map((comment, idx) => (
-                                                <div
-                                                    key={comment.id}
-                                                    className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-pink-200 hover:-translate-y-0.5"
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        {/* Avatar with Instagram gradient ring */}
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-[2px] flex-shrink-0">
-                                                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                                                                <span className="text-sm font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-transparent bg-clip-text">
-                                                                    {comment.athleteName?.[0]?.toUpperCase() || '?'}
-                                                                </span>
+                                            {/* TikTok Comments */}
+                                            <div className="space-y-3">
+                                                {featuredTiktok.map((comment, idx) => (
+                                                    <div
+                                                        key={comment.id}
+                                                        className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-black/10 hover:-translate-y-0.5"
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            {/* Avatar */}
+                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                                                {comment.athleteName?.[0]?.toUpperCase() || '?'}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                {comment.athleteName && (
+                                                                    <span className="font-semibold text-gray-900 text-sm block mb-1">
+                                                                        @{comment.athleteName}
+                                                                    </span>
+                                                                )}
+                                                                <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            {comment.athleteName && (
-                                                                <span className="font-semibold text-gray-900 text-sm block mb-1">
-                                                                    @{comment.athleteName}
-                                                                </span>
-                                                            )}
-                                                            <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Instagram Column */}
+                                    {featuredInstagram.length > 0 && (
+                                        <div className="relative">
+                                            {/* Platform Header */}
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
+                                                    <span className="text-white text-xl">📸</span>
+                                                </div>
+                                                <h3 className="font-bold text-xl text-gray-900">Instagram</h3>
+                                            </div>
+
+                                            {/* Instagram Comments */}
+                                            <div className="space-y-3">
+                                                {featuredInstagram.map((comment, idx) => (
+                                                    <div
+                                                        key={comment.id}
+                                                        className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-pink-200 hover:-translate-y-0.5"
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            {/* Avatar with Instagram gradient ring */}
+                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-[2px] flex-shrink-0">
+                                                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                                                                    <span className="text-sm font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-transparent bg-clip-text">
+                                                                        {comment.athleteName?.[0]?.toUpperCase() || '?'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                {comment.athleteName && (
+                                                                    <span className="font-semibold text-gray-900 text-sm block mb-1">
+                                                                        @{comment.athleteName}
+                                                                    </span>
+                                                                )}
+                                                                <p className="text-gray-700 text-sm leading-relaxed">{comment.text}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </section>
-                );
-            })()}
+                        </section>
+                    );
+                })()
+            }
 
             {/* Footer */}
             <footer className="py-12 px-8 text-center bg-gradient-to-t from-subway-green/10 to-transparent">
@@ -948,24 +1129,28 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.2.7</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.0</p>
             </footer>
 
             {/* Athlete Detail Modal */}
-            {selectedAthlete && (
-                <AthleteDetailModal
-                    athlete={selectedAthlete}
-                    onClose={() => setSelectedAthlete(null)}
-                />
-            )}
+            {
+                selectedAthlete && (
+                    <AthleteDetailModal
+                        athlete={selectedAthlete}
+                        onClose={() => setSelectedAthlete(null)}
+                    />
+                )
+            }
 
             {/* Athlete Media Modal */}
-            {selectedMediaAthlete && (
-                <AthleteMediaModal
-                    athlete={selectedMediaAthlete}
-                    onClose={() => setSelectedMediaAthlete(null)}
-                />
-            )}
-        </div>
+            {
+                selectedMediaAthlete && (
+                    <AthleteMediaModal
+                        athlete={selectedMediaAthlete}
+                        onClose={() => setSelectedMediaAthlete(null)}
+                    />
+                )
+            }
+        </div >
     );
 };
