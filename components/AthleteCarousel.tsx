@@ -188,31 +188,27 @@ export const parseAthleteImageCSV = (csvText: string): AthleteImage[] => {
 };
 
 // Helper to convert Athlete[] to AthleteImage[] for the carousel
-// Now includes ALL athletes (not just those with profile images)
+// Only includes athletes with BOTH profile image AND content
 export const athletesToCarouselImages = (athletes: Athlete[]): AthleteImage[] => {
     return athletes
         .filter(a => !a.user_name.startsWith('Video_Athlete_') && !a.user_name.startsWith('Story_Athlete_'))
+        // Only include if they have profile image AND (content image OR content video)
+        .filter(a => {
+            const hasProfileImage = a.profile_image_url && a.profile_image_url.startsWith('http');
+            const hasContent = (a.content_image_url && a.content_image_url.startsWith('http')) ||
+                (a.content_video_url && a.content_video_url.startsWith('http')) ||
+                (a.ig_reel_url && a.ig_reel_url.startsWith('http'));
+            return hasProfileImage && hasContent;
+        })
         .map(a => {
             const nameParts = a.user_name.split(' ');
-
-            // Use profile image, or content thumbnail, or content image as fallback
-            let imageUrl = a.profile_image_url || '';
-            if (!imageUrl || !imageUrl.startsWith('http')) {
-                imageUrl = a.content_thumbnail_url || a.content_image_url || '';
-            }
-            // Generate a placeholder if no image available
-            if (!imageUrl || !imageUrl.startsWith('http')) {
-                const initials = `${nameParts[0]?.[0] || ''}${nameParts[1]?.[0] || ''}`.toUpperCase();
-                // Use a data URI for initials placeholder
-                imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.user_name)}&background=random&color=fff&size=200`;
-            }
 
             return {
                 firstName: nameParts[0] || '',
                 lastName: nameParts.slice(1).join(' ') || '',
                 schoolName: '',
                 sport: '',
-                imageUrl: imageUrl,
+                imageUrl: a.profile_image_url,
                 athlete: a,
                 isVideoAthlete: a.campaign_type === 'video',
                 igReelUrl: a.ig_reel_url || ''
