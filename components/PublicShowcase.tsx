@@ -1174,7 +1174,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.1</p>
+                <p className="text-xs text-gray-400 mt-2">v1.3.2</p>
             </footer>
 
             {/* Athlete Detail Modal */}
@@ -1192,7 +1192,9 @@ export const PublicShowcase: React.FC = () => {
                 selectedMediaAthlete && (
                     <AthleteMediaModal
                         athlete={selectedMediaAthlete}
+                        allAthletes={athleteMediaList}
                         onClose={() => setSelectedMediaAthlete(null)}
+                        onNavigate={(newAthlete) => setSelectedMediaAthlete(newAthlete)}
                     />
                 )
             }

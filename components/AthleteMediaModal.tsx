@@ -1,11 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, ExternalLink, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AthleteListItem, SignedMediaItem, AthleteMediaResponse, getAthleteMedia } from '../services/mediaService';
 
 interface Props {
     athlete: AthleteListItem;
+    allAthletes?: AthleteListItem[]; // Optional: all athletes for navigation
     onClose: () => void;
+    onNavigate?: (athlete: AthleteListItem) => void; // Callback when navigating to new athlete
 }
+
+// Skeleton loading animation
+const SkeletonLoader: React.FC = () => (
+    <div className="animate-pulse">
+        <div className="aspect-[9/16] max-h-[60vh] bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl overflow-hidden relative">
+            {/* Fake video UI elements */}
+            <div className="absolute bottom-4 left-4 space-y-2">
+                <div className="h-3 w-24 bg-gray-400/30 rounded" />
+                <div className="h-3 w-32 bg-gray-400/30 rounded" />
+            </div>
+            {/* Play button placeholder */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-gray-400/40 rounded-full flex items-center justify-center">
+                    <div className="w-0 h-0 border-l-[12px] border-l-gray-400/60 border-y-[8px] border-y-transparent ml-1" />
+                </div>
+            </div>
+            {/* Progress bar placeholder */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-400/30">
+                <div className="h-full w-1/3 bg-gray-400/50 animate-shimmer" />
+            </div>
+        </div>
+    </div>
+);
 
 const MediaView: React.FC<{ media: SignedMediaItem; isLoading: boolean }> = ({ media, isLoading }) => {
     const [imageError, setImageError] = useState(false);
@@ -16,11 +41,7 @@ const MediaView: React.FC<{ media: SignedMediaItem; isLoading: boolean }> = ({ m
     }, [media.signedVideoUrl, media.signedImageUrl]);
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-xl">
-                <Loader2 className="w-8 h-8 animate-spin text-subway-green" />
-            </div>
-        );
+        return <SkeletonLoader />;
     }
 
     // Video content
@@ -141,10 +162,29 @@ function getExternalLink(media: SignedMediaItem | null, athlete: AthleteListItem
     return null;
 }
 
-export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
+export const AthleteMediaModal: React.FC<Props> = ({ athlete, allAthletes, onClose, onNavigate }) => {
     const [mediaData, setMediaData] = useState<AthleteMediaResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Find current index in the list for navigation
+    const currentIndex = allAthletes?.findIndex(
+        a => a.firstName === athlete.firstName && a.lastName === athlete.lastName
+    ) ?? -1;
+
+    const hasPrev = currentIndex > 0;
+    const hasNext = allAthletes ? currentIndex < allAthletes.length - 1 : false;
+    const prevAthlete = hasPrev && allAthletes ? allAthletes[currentIndex - 1] : null;
+    const nextAthlete = hasNext && allAthletes ? allAthletes[currentIndex + 1] : null;
+
+    // Navigate to prev/next athlete
+    const navigateTo = useCallback((direction: 'prev' | 'next') => {
+        if (direction === 'prev' && prevAthlete && onNavigate) {
+            onNavigate(prevAthlete);
+        } else if (direction === 'next' && nextAthlete && onNavigate) {
+            onNavigate(nextAthlete);
+        }
+    }, [prevAthlete, nextAthlete, onNavigate]);
 
     // Load signed media when modal opens
     useEffect(() => {
@@ -181,27 +221,62 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
         };
     }, [athlete]);
 
+    // Preload next/prev athlete media (fire and forget) 
+    useEffect(() => {
+        if (nextAthlete) {
+            // Preload next athlete's media in the background
+            getAthleteMedia(nextAthlete).catch(() => { });
+        }
+        if (prevAthlete) {
+            getAthleteMedia(prevAthlete).catch(() => { });
+        }
+    }, [nextAthlete, prevAthlete]);
+
     // Select the single best media item
     const bestMedia = selectBestMedia(mediaData?.media || []);
     const externalLink = getExternalLink(bestMedia, athlete);
 
-    // Keyboard navigation (Escape to close)
+    // Keyboard navigation (Escape to close, Arrow keys to navigate)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
+            } else if (e.key === 'ArrowLeft' && hasPrev) {
+                navigateTo('prev');
+            } else if (e.key === 'ArrowRight' && hasNext) {
+                navigateTo('next');
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
+    }, [onClose, navigateTo, hasPrev, hasNext]);
 
     return (
         <div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={onClose}
         >
+            {/* Left Arrow */}
+            {hasPrev && onNavigate && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); navigateTo('prev'); }}
+                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-xl transition-all hover:scale-110 z-10"
+                >
+                    <ChevronLeft className="w-6 h-6 text-gray-800" />
+                </button>
+            )}
+
+            {/* Right Arrow */}
+            {hasNext && onNavigate && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); navigateTo('next'); }}
+                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-xl transition-all hover:scale-110 z-10"
+                >
+                    <ChevronRight className="w-6 h-6 text-gray-800" />
+                </button>
+            )}
+
             <div
                 className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
@@ -234,6 +309,18 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                             )}
                         </div>
                     </div>
+
+                    {/* Navigation hint */}
+                    {allAthletes && allAthletes.length > 1 && (
+                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
+                            <span className="px-2 py-1 bg-gray-100 rounded">←</span>
+                            <span className="px-2 py-1 bg-gray-100 rounded">→</span>
+                            <span>to navigate athletes</span>
+                            <span className="ml-4">
+                                {currentIndex + 1} of {allAthletes.length}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Media Content */}
@@ -242,9 +329,9 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                         <p>{error}</p>
                     </div>
                 ) : isLoading ? (
-                    <div className="p-6 flex flex-col items-center justify-center gap-3">
-                        <Loader2 className="w-8 h-8 animate-spin text-subway-green" />
-                        <p className="text-gray-500 text-sm">Loading media...</p>
+                    <div className="p-6">
+                        <SkeletonLoader />
+                        <p className="text-center text-gray-400 text-sm mt-4">Loading media...</p>
                     </div>
                 ) : bestMedia ? (
                     <div className="p-6">
