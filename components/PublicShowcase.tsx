@@ -268,9 +268,10 @@ export const PublicShowcase: React.FC = () => {
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
 
-    // Handle athlete click - video athletes open IG Reel, story athletes show modal
+    // Handle athlete click - video athletes open IG Reel, story athletes show content modal
     const handleAthleteClick = (athleteImage: AthleteImage) => {
         console.log('[PublicShowcase] Athlete clicked:', athleteImage.firstName, athleteImage.lastName);
+        const athlete = athleteImage.athlete;
 
         // Video athletes: open their Instagram Reel directly
         if (athleteImage.isVideoAthlete && athleteImage.igReelUrl) {
@@ -279,7 +280,34 @@ export const PublicShowcase: React.FC = () => {
             return;
         }
 
-        // Story athletes: show media modal or detail modal
+        // Story athletes: show content from Firestore data or fallback to API
+        // First, check if we have content_image_url directly in athlete data
+        const contentImageUrl = athlete?.content_image_url;
+        const igStoryUrl = athlete?.ig_story_url;
+
+        if (contentImageUrl && contentImageUrl.startsWith('http')) {
+            console.log('[PublicShowcase] Opening content with Firestore S3 URL');
+            // For direct S3 URLs, we create a minimal athlete object that the modal can render
+            // The modal will use the direct URL instead of fetching signed URLs
+            const contentAthlete: AthleteListItem = {
+                firstName: athleteImage.firstName,
+                lastName: athleteImage.lastName,
+                sport: athleteImage.sport || '',
+                campaign: athlete?.campaign_type || 'IG Story',
+                school: athleteImage.schoolName || '',
+                media: [{
+                    hash: `direct:${contentImageUrl}`, // Encode the URL in the hash for direct use
+                    mediaType: 'ig_story',
+                    instagramPermalink: igStoryUrl || '',
+                    hasVideo: false,
+                    hasImage: true
+                }]
+            };
+            setSelectedMediaAthlete(contentAthlete);
+            return;
+        }
+
+        // Fallback: check API media lookup
         const nameKey = `${athleteImage.firstName}-${athleteImage.lastName}`.toLowerCase();
         const mediaAthlete = athleteMediaLookup.get(nameKey);
         console.log('[PublicShowcase] Media athlete found:', !!mediaAthlete);
@@ -287,20 +315,15 @@ export const PublicShowcase: React.FC = () => {
         if (mediaAthlete && mediaAthlete.media.length > 0) {
             console.log('[PublicShowcase] Opening media modal with API data');
             setSelectedMediaAthlete(mediaAthlete);
-        } else if (athleteImage.athlete) {
+        } else if (athlete) {
             console.log('[PublicShowcase] Opening detail modal');
-            setSelectedAthlete(athleteImage.athlete);
+            setSelectedAthlete(athlete);
         } else {
-            console.log('[PublicShowcase] Opening fallback modal');
-            const tempAthlete: AthleteListItem = {
-                firstName: athleteImage.firstName,
-                lastName: athleteImage.lastName,
-                sport: athleteImage.sport,
-                campaign: '',
-                school: athleteImage.schoolName,
-                media: []
-            };
-            setSelectedMediaAthlete(tempAthlete);
+            console.log('[PublicShowcase] No content available');
+            // Show detail modal if available
+            if (athleteImage.athlete) {
+                setSelectedAthlete(athleteImage.athlete);
+            }
         }
     };
 

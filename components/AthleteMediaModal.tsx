@@ -86,6 +86,38 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
         const loadMedia = async () => {
             setIsLoading(true);
             setError(null);
+
+            // Check if we have direct S3 URLs encoded in the hash (format: "direct:https://...")
+            const firstMedia = athlete.media[0];
+            if (firstMedia && firstMedia.hash?.startsWith('direct:')) {
+                // Direct URL mode - extract URL from hash and use directly
+                const directUrl = firstMedia.hash.replace('direct:', '');
+                console.log('[AthleteMediaModal] Using direct S3 URL:', directUrl);
+
+                const directMediaResponse: AthleteMediaResponse = {
+                    firstName: athlete.firstName,
+                    lastName: athlete.lastName,
+                    sport: athlete.sport,
+                    campaign: athlete.campaign,
+                    media: [{
+                        signedImageUrl: directUrl,
+                        signedVideoUrl: null,
+                        signedThumbnailUrl: null,
+                        mediaType: firstMedia.mediaType,
+                        instagramPermalink: firstMedia.instagramPermalink,
+                        hasVideo: firstMedia.hasVideo,
+                        hasImage: firstMedia.hasImage
+                    }]
+                };
+
+                if (!cancelled) {
+                    setMediaData(directMediaResponse);
+                    setIsLoading(false);
+                }
+                return;
+            }
+
+            // Regular mode - fetch signed URLs from API
             try {
                 const data = await getAthleteMedia(athlete);
                 if (!cancelled) {

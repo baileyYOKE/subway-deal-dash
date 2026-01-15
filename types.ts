@@ -8,10 +8,16 @@ export interface Athlete {
   tiktok_account: string;
   assigned_to: string;
   campaign_type: CampaignType; // 'video' = TT/IG Reel + Story, 'story' = Story only
-  profile_image_url: string; // Roster headshot URL
+  profile_image_url: string; // Roster headshot URL (college website)
 
-  // URLs
+  // Content URLs (S3 media)
+  content_image_url?: string; // S3 URL for story image content
+  content_video_url?: string; // S3 URL for video content
+  content_thumbnail_url?: string; // S3 URL for video thumbnail
+
+  // Instagram URLs
   ig_reel_url: string;
+  ig_story_url?: string; // Instagram story permalink
   tiktok_post_url: string;
 
   // TikTok Metrics
