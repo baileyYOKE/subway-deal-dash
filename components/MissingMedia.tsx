@@ -172,7 +172,7 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
     // Find athletes with partial media (some but not all)
     // For Subway Deal 2:
     // - Featured Athletes (TikTok/Reel): Need TikTok OR Reel + Story 1 + Profile Pic
-    // - SubClub Athletes (Story only): Need Story 1 + Profile Pic
+    // - SubClub Athletes (Story only): Need Story 1 + Profile Pic + AWS URL (content)
     const athletesWithMissing = useMemo(() => {
         return data
             .map(athlete => {
@@ -180,13 +180,14 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                 const hasReel = !!(athlete.ig_reel_url && athlete.ig_reel_url.length > 0) || athlete.ig_reel_views > 0;
                 const hasStory1 = athlete.ig_story_1_views > 0;
                 const hasProfilePic = !!(athlete.profile_image_url && athlete.profile_image_url.length > 0);
+                const hasAwsUrl = !!(athlete.approved_aws_url && athlete.approved_aws_url.length > 0);
 
                 // Determine athlete type
                 const isFeatured = hasTikTok || hasReel;
                 const isSubClub = !isFeatured && hasStory1;
 
                 // For Featured: need video + story + profile pic
-                // For SubClub: need story + profile pic
+                // For SubClub: need story + profile pic + aws url (content)
                 let isComplete = false;
                 let missingItems: string[] = [];
 
@@ -197,10 +198,11 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                     if (!hasProfilePic) missingItems.push('Profile Pic');
                     isComplete = (hasTikTok || hasReel) && hasStory1 && hasProfilePic;
                 } else if (isSubClub) {
-                    // SubClub athlete - needs Story 1 + Profile Pic
+                    // SubClub athlete - needs Story 1 + Profile Pic + AWS URL
                     if (!hasStory1) missingItems.push('Story');
                     if (!hasProfilePic) missingItems.push('Profile Pic');
-                    isComplete = hasStory1 && hasProfilePic;
+                    if (!hasAwsUrl) missingItems.push('AWS URL');
+                    isComplete = hasStory1 && hasProfilePic && hasAwsUrl;
                 } else {
                     // No content at all - skip
                     return null;
@@ -212,6 +214,7 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                     hasReel,
                     hasStory1,
                     hasProfilePic,
+                    hasAwsUrl,
                     isFeatured,
                     isSubClub,
                     missingItems,
@@ -446,7 +449,7 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
             <div className="space-y-2">
                 {athletesWithMissing.map((item) => {
                     if (!item) return null;
-                    const { athlete, hasTikTok, hasReel, hasStory1, hasProfilePic, isFeatured, isSubClub, missingItems } = item;
+                    const { athlete, hasTikTok, hasReel, hasStory1, hasProfilePic, hasAwsUrl, isFeatured, isSubClub, missingItems } = item;
                     const isExpanded = expandedId === athlete.id;
                     const values = editValues[athlete.id] || {};
 
@@ -497,6 +500,11 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasProfilePic ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             {hasProfilePic ? '✓' : '✗'} Profile Pic
                                         </span>
+                                        {isSubClub && (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${hasAwsUrl ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {hasAwsUrl ? '✓' : '✗'} AWS URL
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -613,6 +621,32 @@ export const MissingMedia: React.FC<Props> = ({ data, onUpdate }) => {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* AWS Content URL (for SubClub athletes) */}
+                                    {isSubClub && (
+                                        <div className={!hasAwsUrl ? 'ring-2 ring-orange-200 rounded-lg p-4 bg-white' : 'p-4 bg-white rounded-lg border border-gray-200'}>
+                                            <h4 className="text-sm font-semibold text-gray-800 mb-3">
+                                                Content URL (AWS) {!hasAwsUrl && <span className="text-orange-500 font-normal">*Missing</span>}
+                                            </h4>
+                                            <div className="flex gap-4 items-center">
+                                                <div className="flex-1">
+                                                    <label className="block text-xs text-gray-500 mb-1">AWS Content URL (approved_aws_url)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={String(getVal('approved_aws_url') || '')}
+                                                        onChange={(e) => handleFieldChange(athlete.id, 'approved_aws_url', e.target.value)}
+                                                        placeholder="https://..."
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hardees-yellow focus:border-transparent"
+                                                    />
+                                                </div>
+                                                {athlete.approved_aws_url && (
+                                                    <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200">
+                                                        <img src={athlete.approved_aws_url} alt="Content" className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-end pt-2">
                                         <button

@@ -14,6 +14,7 @@ export interface Athlete {
   content_image_url?: string; // S3 URL for story image content
   content_video_url?: string; // S3 URL for video content
   content_thumbnail_url?: string; // S3 URL for video thumbnail
+  approved_aws_url?: string; // AWS URL for approved Instagram Story content
 
   // Instagram URLs
   ig_reel_url: string;
