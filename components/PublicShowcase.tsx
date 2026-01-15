@@ -228,8 +228,23 @@ export const PublicShowcase: React.FC = () => {
     const [selectedMediaAthlete, setSelectedMediaAthlete] = useState<AthleteListItem | null>(null);
 
     useEffect(() => {
+        // Check localStorage first
         const authStatus = localStorage.getItem('subway_public_auth');
-        if (authStatus === 'true') setIsAuthenticated(true);
+        if (authStatus === 'true') {
+            setIsAuthenticated(true);
+            return;
+        }
+
+        // Check URL query param: ?auth=subway or #/public?auth=subway
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        const authParam = urlParams.get('auth') || hashParams.get('auth');
+
+        if (authParam?.toLowerCase() === PUBLIC_PASSCODE) {
+            setIsAuthenticated(true);
+            localStorage.setItem('subway_public_auth', 'true');
+            console.log('✅ Authenticated via URL parameter');
+        }
     }, []);
 
     useEffect(() => {
