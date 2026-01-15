@@ -87,12 +87,13 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
             setIsLoading(true);
             setError(null);
 
-            // Check if we have direct S3 URLs encoded in the hash (format: "direct:https://...")
+            // Check if we have direct S3 URLs encoded in the hash
             const firstMedia = athlete.media[0];
-            if (firstMedia && firstMedia.hash?.startsWith('direct:')) {
+            if (firstMedia && (firstMedia.hash?.startsWith('direct:') || firstMedia.hash?.startsWith('direct-video:'))) {
                 // Direct URL mode - extract URL from hash and use directly
-                const directUrl = firstMedia.hash.replace('direct:', '');
-                console.log('[AthleteMediaModal] Using direct S3 URL:', directUrl);
+                const isVideo = firstMedia.hash.startsWith('direct-video:');
+                const directUrl = firstMedia.hash.replace('direct-video:', '').replace('direct:', '');
+                console.log('[AthleteMediaModal] Using direct S3 URL:', directUrl, 'isVideo:', isVideo);
 
                 const directMediaResponse: AthleteMediaResponse = {
                     firstName: athlete.firstName,
@@ -100,13 +101,13 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                     sport: athlete.sport,
                     campaign: athlete.campaign,
                     media: [{
-                        signedImageUrl: directUrl,
-                        signedVideoUrl: null,
+                        signedImageUrl: isVideo ? null : directUrl,
+                        signedVideoUrl: isVideo ? directUrl : null,
                         signedThumbnailUrl: null,
                         mediaType: firstMedia.mediaType,
-                        instagramPermalink: firstMedia.instagramPermalink,
-                        hasVideo: firstMedia.hasVideo,
-                        hasImage: firstMedia.hasImage
+                        instagramPermalink: '', // Expired
+                        hasVideo: isVideo,
+                        hasImage: !isVideo
                     }]
                 };
 
@@ -201,16 +202,11 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                                 <p className="text-gray-500">{athlete.school}</p>
                             )}
                             <p className="text-gray-500">{athlete.sport}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                {athlete.campaign && (
-                                    <span className="text-xs px-2 py-0.5 bg-subway-green/10 text-subway-green rounded-full font-medium">
-                                        {athlete.campaign}
-                                    </span>
-                                )}
-                                <span className="text-xs text-gray-400">
-                                    {mediaCount} media item{mediaCount !== 1 ? 's' : ''}
+                            {athlete.campaign && (
+                                <span className="text-xs px-2 py-0.5 bg-subway-green/10 text-subway-green rounded-full font-medium">
+                                    {athlete.campaign}
                                 </span>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -227,66 +223,15 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, onClose }) => {
                     </div>
                 ) : mediaItems.length > 0 ? (
                     <div className="p-6">
-                        {/* Media type and navigation */}
+                        {/* Media type label */}
                         <div className="flex items-center justify-between mb-4">
                             <MediaTypeLabel type={currentMedia?.mediaType} />
-                            {hasMultiple && (
-                                <span className="text-gray-400 text-sm">
-                                    {currentIdx + 1} of {mediaItems.length}
-                                </span>
-                            )}
                         </div>
 
-                        {/* Media viewer */}
+                        {/* Media viewer - single item, no navigation */}
                         <div className="relative">
-                            {hasMultiple && (
-                                <button
-                                    onClick={goPrev}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition"
-                                >
-                                    <ChevronLeft className="w-5 h-5 text-gray-700" />
-                                </button>
-                            )}
-
                             {currentMedia && <MediaView media={currentMedia} isLoading={false} />}
-
-                            {hasMultiple && (
-                                <button
-                                    onClick={goNext}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition"
-                                >
-                                    <ChevronRight className="w-5 h-5 text-gray-700" />
-                                </button>
-                            )}
                         </div>
-
-                        {/* Dots indicator */}
-                        {hasMultiple && (
-                            <div className="flex justify-center gap-2 mt-4">
-                                {mediaItems.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        className={`w-2 h-2 rounded-full transition-colors ${idx === currentIdx
-                                            ? 'bg-subway-green'
-                                            : 'bg-gray-300 hover:bg-gray-400'
-                                            }`}
-                                        onClick={() => setCurrentIdx(idx)}
-                                    />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Instagram link */}
-                        {currentMedia?.instagramPermalink && (
-                            <a
-                                href={currentMedia.instagramPermalink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 flex items-center justify-center gap-2 text-subway-green hover:text-subway-green/80 font-medium transition"
-                            >
-                                View on Instagram <ExternalLink className="w-4 h-4" />
-                            </a>
-                        )}
                     </div>
                 ) : (
                     <div className="p-6 text-center text-gray-400">
