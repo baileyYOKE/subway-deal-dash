@@ -267,7 +267,38 @@ export const PublicShowcase: React.FC = () => {
     };
 
     const stats = calculateDetailedStats(data);
-    const allComments = featuredComments;
+    // Combine scraped comments from TikTok and IG, dedupe by text, sort by likes
+    const allComments = useMemo(() => {
+        const ttComments = (scrapedData?.tiktok || []).map(c => ({
+            id: c.id || Math.random().toString(36).substr(2, 9),
+            text: c.text,
+            platform: 'tiktok' as const,
+            athleteName: c.athleteName || c.username || '',
+            likes: c.likes || 0
+        }));
+        const igComments = (scrapedData?.instagram || []).map(c => ({
+            id: c.id || Math.random().toString(36).substr(2, 9),
+            text: c.text,
+            platform: 'instagram' as const,
+            athleteName: c.athleteName || c.username || '',
+            likes: c.likes || 0
+        }));
+
+        // Combine and dedupe by text
+        const all = [...ttComments, ...igComments];
+        const seen = new Set();
+        const dedupedComments = all.filter(c => {
+            const key = c.text?.toLowerCase().trim();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        // Sort by likes (highest first) and return top 12
+        return dedupedComments
+            .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+            .slice(0, 12);
+    }, [scrapedData]);
 
     // Create lookup map for athlete media by name
     const athleteMediaLookup = useMemo(() => createAthleteLookup(athleteMediaList), [athleteMediaList]);
