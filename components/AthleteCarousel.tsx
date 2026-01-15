@@ -49,10 +49,10 @@ const CarouselRow: React.FC<{
                         {/* Ring colors: Video=blue/teal, Story=Instagram gradient (pink/orange) */}
                         <div
                             className={`w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-white p-[3px] ${athlete.isVideoAthlete
-                                    ? 'bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500'
-                                    : athlete.hasMedia || athlete.imageUrl
-                                        ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
-                                        : 'bg-gray-300'
+                                ? 'bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500'
+                                : athlete.hasMedia || athlete.imageUrl
+                                    ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                                    : 'bg-gray-300'
                                 }`}
                         >
                             <div className="w-full h-full rounded-full overflow-hidden bg-white">
@@ -72,7 +72,7 @@ const CarouselRow: React.FC<{
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                             <div className={`text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg flex items-center gap-1 ${athlete.isVideoAthlete ? 'bg-blue-600' : 'bg-pink-600'
                                 }`}>
-                                {athlete.isVideoAthlete ? <span>🎬</span> : <span>📸</span>}
+                                {athlete.isVideoAthlete ? <span>⭐</span> : <span>📸</span>}
                                 {athlete.firstName} {athlete.lastName}
                             </div>
                         </div>
@@ -112,9 +112,9 @@ export const AthleteCarousel: React.FC<Props> = ({ athletes, onAthleteClick, pau
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
 
             {/* Three rows - each has all athletes, different speeds/directions */}
-            <CarouselRow athletes={athletes} direction="left" duration={200} onAthleteClick={onAthleteClick} paused={paused} />
-            <CarouselRow athletes={athletes} direction="right" duration={220} onAthleteClick={onAthleteClick} paused={paused} />
-            <CarouselRow athletes={athletes} direction="left" duration={240} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={athletes} direction="left" duration={400} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={athletes} direction="right" duration={440} onAthleteClick={onAthleteClick} paused={paused} />
+            <CarouselRow athletes={athletes} direction="left" duration={480} onAthleteClick={onAthleteClick} paused={paused} />
         </div>
     );
 };
@@ -188,19 +188,34 @@ export const parseAthleteImageCSV = (csvText: string): AthleteImage[] => {
 };
 
 // Helper to convert Athlete[] to AthleteImage[] for the carousel
+// Now includes ALL athletes (not just those with profile images)
 export const athletesToCarouselImages = (athletes: Athlete[]): AthleteImage[] => {
     return athletes
-        .filter(a => a.profile_image_url && a.profile_image_url.startsWith('http'))
         .filter(a => !a.user_name.startsWith('Video_Athlete_') && !a.user_name.startsWith('Story_Athlete_'))
         .map(a => {
             const nameParts = a.user_name.split(' ');
+
+            // Use profile image, or content thumbnail, or content image as fallback
+            let imageUrl = a.profile_image_url || '';
+            if (!imageUrl || !imageUrl.startsWith('http')) {
+                imageUrl = a.content_thumbnail_url || a.content_image_url || '';
+            }
+            // Generate a placeholder if no image available
+            if (!imageUrl || !imageUrl.startsWith('http')) {
+                const initials = `${nameParts[0]?.[0] || ''}${nameParts[1]?.[0] || ''}`.toUpperCase();
+                // Use a data URI for initials placeholder
+                imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.user_name)}&background=random&color=fff&size=200`;
+            }
+
             return {
                 firstName: nameParts[0] || '',
                 lastName: nameParts.slice(1).join(' ') || '',
                 schoolName: '',
                 sport: '',
-                imageUrl: a.profile_image_url,
-                athlete: a
+                imageUrl: imageUrl,
+                athlete: a,
+                isVideoAthlete: a.campaign_type === 'video',
+                igReelUrl: a.ig_reel_url || ''
             };
         });
 };

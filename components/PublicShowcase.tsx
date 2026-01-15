@@ -630,13 +630,13 @@ export const PublicShowcase: React.FC = () => {
                                 <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 via-cyan-400 to-teal-500 p-[2px]">
                                     <span className="block w-full h-full rounded-full bg-white"></span>
                                 </span>
-                                <span className="text-blue-600">🎬 Video Athletes</span>
+                                <span className="text-blue-600">🎬 Featured Athletes</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
                                     <span className="block w-full h-full rounded-full bg-white"></span>
                                 </span>
-                                <span className="text-pink-600">📸 Story Athletes</span>
+                                <span className="text-pink-600">📸 Sub Club Athletes</span>
                             </div>
                         </div>
                     </div>
@@ -654,12 +654,12 @@ export const PublicShowcase: React.FC = () => {
                 const storyAthletes = data.filter(a => a.campaign_type === 'story' && (a.ig_followers || 0) > 0);
 
                 const cohorts = [
-                    { name: 'Under 1K', min: 0, max: 999, color: 'from-emerald-500 to-green-600', icon: '🌱' },
-                    { name: '1K-2K', min: 1000, max: 2000, color: 'from-green-500 to-teal-600', icon: '🌿' },
-                    { name: '2K-3K', min: 2001, max: 3000, color: 'from-teal-500 to-cyan-600', icon: '🌳' },
-                    { name: '3K-5K', min: 3001, max: 5000, color: 'from-cyan-500 to-blue-600', icon: '🌲' },
-                    { name: '5K-10K', min: 5001, max: 10000, color: 'from-blue-500 to-indigo-600', icon: '🏔️' },
-                    { name: '10K+', min: 10001, max: Infinity, color: 'from-indigo-500 to-purple-600', icon: '🏰' },
+                    { name: 'Under 1K', min: 0, max: 999, color: 'from-emerald-500 to-green-600' },
+                    { name: '1K-2K', min: 1000, max: 2000, color: 'from-green-500 to-teal-600' },
+                    { name: '2K-3K', min: 2001, max: 3000, color: 'from-teal-500 to-cyan-600' },
+                    { name: '3K-5K', min: 3001, max: 5000, color: 'from-cyan-500 to-blue-600' },
+                    { name: '5K-10K', min: 5001, max: 10000, color: 'from-blue-500 to-indigo-600' },
+                    { name: '10K+', min: 10001, max: Infinity, color: 'from-indigo-500 to-purple-600' },
                 ];
 
                 const cohortData = cohorts.map(cohort => {
@@ -747,8 +747,7 @@ export const PublicShowcase: React.FC = () => {
                                     <div className="space-y-4">
                                         {cohortData.map((cohort, idx) => (
                                             <div key={cohort?.name} className="flex items-center gap-4">
-                                                <div className="w-24 flex-shrink-0">
-                                                    <div className="text-2xl">{cohort?.icon}</div>
+                                                <div className="w-28 flex-shrink-0">
                                                     <div className="text-sm font-bold text-gray-700">{cohort?.name}</div>
                                                     <div className="text-xs text-gray-500">Avg: {cohort?.avgViews?.toLocaleString()} views</div>
                                                 </div>
