@@ -7,6 +7,7 @@ import { Lock, Eye, Users, Video, TrendingUp, MessageCircle, ExternalLink, Heart
 import { AthleteCarousel, AthleteImage, parseAthleteImageCSV, athletesToCarouselImages } from './AthleteCarousel';
 import { AthleteDetailModal } from './AthleteDetailModal';
 import { AthleteMediaModal } from './AthleteMediaModal';
+import { TikTokIcon, ReelsIcon, IGStoriesIcon, InstagramIcon } from './PlatformIcons';
 
 const PUBLIC_PASSCODE = 'subway';
 
@@ -118,11 +119,12 @@ const FloatingSandwich: React.FC<{ style: React.CSSProperties; emoji: string }> 
 );
 
 // Stat Card - Premium glass effect
-const StatCard: React.FC<{ icon: React.ReactNode; value: number | string; label: string; suffix?: string; delay?: number }> =
-    ({ icon, value, label, suffix = '', delay = 0 }) => (
+const StatCard: React.FC<{ icon: React.ReactNode; value: number | string; label: string; suffix?: string; delay?: number; onClick?: () => void }> =
+    ({ icon, value, label, suffix = '', delay = 0, onClick }) => (
         <div
-            className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-subway-green/20 shadow-xl shadow-subway-green/5 hover:shadow-2xl hover:shadow-subway-green/10 transition-all duration-500 group hover:-translate-y-2"
+            className={`relative bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-subway-green/20 shadow-xl shadow-subway-green/5 hover:shadow-2xl hover:shadow-subway-green/10 transition-all duration-500 group hover:-translate-y-2 ${onClick ? 'cursor-pointer' : ''}`}
             style={{ animationDelay: `${delay}ms` }}
+            onClick={onClick}
         >
             <div className="absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-br from-subway-green to-subway-yellow rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-transform">
                 <div className="text-white">{icon}</div>
@@ -530,12 +532,14 @@ export const PublicShowcase: React.FC = () => {
                             value={stats.totalAthletes}
                             label="Total Athletes"
                             delay={100}
+                            onClick={() => document.getElementById('athlete-carousel')?.scrollIntoView({ behavior: 'smooth' })}
                         />
                         <StatCard
                             icon={<Video className="w-6 h-6" />}
                             value={stats.totalPosts}
                             label="Total Posts"
                             delay={200}
+                            onClick={() => document.getElementById('athlete-carousel')?.scrollIntoView({ behavior: 'smooth' })}
                         />
                     </div>
                 </div>
@@ -563,15 +567,15 @@ export const PublicShowcase: React.FC = () => {
                             const maxScale = 10; // 0-10% scale
 
                             return (
-                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
                                     <div className="flex items-center gap-2 mb-4">
                                         <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">TT</span>
+                                            <TikTokIcon className="w-6 h-6 text-white" />
                                         </div>
                                         <span className="font-bold text-gray-900">TikTok</span>
                                         {beatingBenchmark && (
                                             <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
-                                                🔥 Above Benchmark
+                                                🏆 {multiplier.toFixed(1)}x Industry Avg
                                             </span>
                                         )}
                                     </div>
@@ -615,9 +619,7 @@ export const PublicShowcase: React.FC = () => {
                                             </div>
                                             <div className="flex justify-between items-center text-xs mt-1">
                                                 <span className="text-gray-400">Industry: {tiktokBenchmark}%</span>
-                                                {beatingBenchmark && (
-                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
-                                                )}
+                                                <span className="text-gray-600 font-semibold">{formatNumber(stats.featured.tiktok.likes + stats.featured.tiktok.comments)} Engagements</span>
                                             </div>
                                         </div>
                                     </div>
@@ -636,15 +638,15 @@ export const PublicShowcase: React.FC = () => {
                             const maxScale = 5; // 0-5% scale for reels
 
                             return (
-                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
                                     <div className="flex items-center gap-2 mb-4">
                                         <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-xl flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">IG</span>
+                                            <ReelsIcon className="w-6 h-6 text-white" />
                                         </div>
                                         <span className="font-bold text-gray-900">IG Reels</span>
                                         {beatingBenchmark && (
                                             <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
-                                                🔥 Above Benchmark
+                                                🏆 {multiplier.toFixed(1)}x Industry Avg
                                             </span>
                                         )}
                                     </div>
@@ -688,9 +690,7 @@ export const PublicShowcase: React.FC = () => {
                                             </div>
                                             <div className="flex justify-between items-center text-xs mt-1">
                                                 <span className="text-gray-400">Industry: {reelBenchmark}%</span>
-                                                {beatingBenchmark && (
-                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
-                                                )}
+                                                <span className="text-gray-600 font-semibold">{formatNumber(stats.featured.reel.likes + stats.featured.reel.comments)} Engagements</span>
                                             </div>
                                         </div>
                                     </div>
@@ -709,15 +709,15 @@ export const PublicShowcase: React.FC = () => {
                             const maxScale = 2; // 0-2% scale for better visual impact
 
                             return (
-                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                                <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
                                     <div className="flex items-center gap-2 mb-4">
                                         <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">📱</span>
+                                            <IGStoriesIcon className="w-6 h-6 text-white" />
                                         </div>
                                         <span className="font-bold text-gray-900">IG Stories</span>
                                         {beatingBenchmark && (
                                             <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
-                                                🔥 Above Benchmark
+                                                🏆 {multiplier.toFixed(1)}x Industry Avg
                                             </span>
                                         )}
                                     </div>
@@ -736,7 +736,7 @@ export const PublicShowcase: React.FC = () => {
                                         </div>
                                         <div className="pt-3 border-t border-gray-100">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-gray-700 font-medium">IG Story Eng Rate</span>
+                                                <span className="text-gray-700 font-medium">Story Engagement Rate</span>
                                                 <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
                                                     {storyEngagementRate.toFixed(2)}%
                                                 </span>
@@ -761,9 +761,7 @@ export const PublicShowcase: React.FC = () => {
                                             </div>
                                             <div className="flex justify-between items-center text-xs mt-1">
                                                 <span className="text-gray-400">Industry: {storyBenchmark}%</span>
-                                                {beatingBenchmark && (
-                                                    <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
-                                                )}
+                                                <span className="text-gray-600 font-semibold">{formatNumber(stats.featured.story.taps + (stats.featured.story.replies || 0))} Engagements</span>
                                             </div>
                                         </div>
                                     </div>
@@ -801,15 +799,15 @@ export const PublicShowcase: React.FC = () => {
                                 <p className="text-gray-500">Story creators • 340 athletes</p>
                             </div>
 
-                            <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 max-w-md mx-auto ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
+                            <div className={`bg-white rounded-2xl p-6 shadow-lg border-2 max-w-md mx-auto transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${beatingBenchmark ? 'border-emerald-400' : 'border-gray-100'}`}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
-                                        <span className="text-white font-bold text-sm">📱</span>
+                                        <IGStoriesIcon className="w-6 h-6 text-white" />
                                     </div>
                                     <span className="font-bold text-gray-900">IG Stories</span>
                                     {beatingBenchmark && (
                                         <span className="ml-auto text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
-                                            🔥 Above Benchmark
+                                            🏆 {multiplier.toFixed(1)}x Industry Avg
                                         </span>
                                     )}
                                 </div>
@@ -832,7 +830,7 @@ export const PublicShowcase: React.FC = () => {
                                     </div>
                                     <div className="pt-3 border-t border-gray-100">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-gray-700 font-medium">IG Story Eng Rate</span>
+                                            <span className="text-gray-700 font-medium">Story Engagement Rate</span>
                                             <span className={`text-lg font-black ${beatingBenchmark ? 'text-emerald-600' : 'text-gray-900'}`}>
                                                 {subClubEngagement.toFixed(2)}%
                                             </span>
@@ -857,9 +855,7 @@ export const PublicShowcase: React.FC = () => {
                                         </div>
                                         <div className="flex justify-between items-center text-xs mt-1">
                                             <span className="text-gray-400">Industry: {storyBenchmark}%</span>
-                                            {beatingBenchmark && (
-                                                <span className="text-emerald-600 font-bold">🏆 {multiplier.toFixed(1)}x Industry Avg</span>
-                                            )}
+                                            <span className="text-gray-600 font-semibold">{formatNumber(stats.subClub.story.taps + stats.subClub.story.replies + stats.subClub.story.shares)} Engagements</span>
                                         </div>
                                     </div>
                                 </div>
@@ -893,7 +889,7 @@ export const PublicShowcase: React.FC = () => {
                 };
 
                 return (
-                    <section className="py-16 relative">
+                    <section id="athlete-carousel" className="py-16 relative">
                         <div className="max-w-7xl mx-auto px-4 mb-8">
                             <div className="flex items-center justify-center gap-3 mb-3">
                                 <div className="w-12 h-12 bg-gradient-to-br from-subway-green to-subway-yellow rounded-xl flex items-center justify-center shadow-lg">
@@ -1170,8 +1166,8 @@ export const PublicShowcase: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-white text-lg font-bold">{featuredTiktok.length} comments</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                                        <span>♪</span>
+                                                    <div className="flex items-center gap-1.5 text-white">
+                                                        <TikTokIcon className="w-5 h-5" />
                                                         <span className="font-medium">TikTok</span>
                                                     </div>
                                                 </div>
@@ -1226,10 +1222,9 @@ export const PublicShowcase: React.FC = () => {
                                                 {/* Header Bar */}
                                                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                                                     <span className="text-gray-900 text-lg font-bold">Comments</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-sm bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-transparent bg-clip-text font-bold">
-                                                            Instagram
-                                                        </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <InstagramIcon className="w-5 h-5 text-pink-500" />
+                                                        <span className="text-sm text-gray-700 font-bold">Instagram</span>
                                                     </div>
                                                 </div>
 
@@ -1292,7 +1287,7 @@ export const PublicShowcase: React.FC = () => {
                     <span className="font-bold text-gray-600">Powered by</span>
                     <span className="font-black text-subway-green text-xl">NIL Club</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">v1.3.7</p>
+                <p className="text-xs text-gray-400 mt-2">v1.4.0</p>
             </footer>
 
             {/* Athlete Detail Modal */}

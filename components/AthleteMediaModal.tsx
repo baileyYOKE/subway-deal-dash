@@ -47,25 +47,29 @@ const MediaView: React.FC<{ media: SignedMediaItem; isLoading: boolean }> = ({ m
     // Video content
     if (media.signedVideoUrl) {
         return (
-            <video
-                src={media.signedVideoUrl}
-                poster={media.signedThumbnailUrl || undefined}
-                controls
-                autoPlay
-                className="w-full max-h-[60vh] rounded-xl object-contain bg-black"
-            />
+            <div className="relative w-full aspect-[9/16] max-h-[70vh] bg-black rounded-xl overflow-hidden">
+                <video
+                    src={media.signedVideoUrl}
+                    poster={media.signedThumbnailUrl || undefined}
+                    controls
+                    autoPlay
+                    className="absolute inset-0 w-full h-full object-contain"
+                />
+            </div>
         );
     }
 
     // Image content
     if (media.signedImageUrl && !imageError) {
         return (
-            <img
-                src={media.signedImageUrl}
-                alt="Media preview"
-                className="w-full max-h-[60vh] rounded-xl object-contain"
-                onError={() => setImageError(true)}
-            />
+            <div className="relative w-full aspect-[9/16] max-h-[70vh] bg-gray-50 rounded-xl overflow-hidden">
+                <img
+                    src={media.signedImageUrl}
+                    alt="Media preview"
+                    className="absolute inset-0 w-full h-full object-contain"
+                    onError={() => setImageError(true)}
+                />
+            </div>
         );
     }
 
@@ -257,106 +261,113 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, allAthletes, onClo
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={onClose}
         >
-            {/* Left Arrow */}
-            {hasPrev && onNavigate && (
-                <button
-                    onClick={(e) => { e.stopPropagation(); navigateTo('prev'); }}
-                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-xl transition-all hover:scale-110 z-10"
-                >
-                    <ChevronLeft className="w-6 h-6 text-gray-800" />
-                </button>
-            )}
-
-            {/* Right Arrow */}
-            {hasNext && onNavigate && (
-                <button
-                    onClick={(e) => { e.stopPropagation(); navigateTo('next'); }}
-                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 shadow-xl transition-all hover:scale-110 z-10"
-                >
-                    <ChevronRight className="w-6 h-6 text-gray-800" />
-                </button>
-            )}
-
-            <div
-                className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="relative p-6 border-b border-gray-100">
+            {/* Modal container with arrows inside */}
+            <div className="relative max-w-md w-full flex items-center gap-2 md:gap-4">
+                {/* Left Arrow */}
+                {hasPrev && onNavigate && (
                     <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition"
+                        onClick={(e) => { e.stopPropagation(); navigateTo('prev'); }}
+                        className="flex-shrink-0 bg-white/90 hover:bg-white rounded-full p-2 md:p-3 shadow-xl transition-all hover:scale-110"
                     >
-                        <X className="w-5 h-5 text-gray-600" />
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
                     </button>
+                )}
 
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-subway-green to-subway-yellow rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                            {athlete.firstName[0]?.toUpperCase()}
+                {/* Modal Content */}
+                <div
+                    className="bg-white rounded-3xl shadow-2xl flex-1 max-h-[90vh] overflow-y-auto"
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className="relative p-6 border-b border-gray-100">
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition"
+                        >
+                            <X className="w-5 h-5 text-gray-600" />
+                        </button>
+
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-gradient-to-br from-subway-green to-subway-yellow rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                                {athlete.firstName[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black text-gray-900">
+                                    {athlete.firstName} {athlete.lastName}
+                                </h2>
+                                {athlete.school && (
+                                    <p className="text-gray-500">{athlete.school}</p>
+                                )}
+                                <p className="text-gray-500">{athlete.sport}</p>
+                                {/* Dynamic badge based on campaign type (not media type) */}
+                                {/* Complete Partnership = Featured Athlete (85), others = Sub Club (340) */}
+                                {athlete.campaign === 'Complete Partnership' ? (
+                                    <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
+                                        🎬 Featured Athlete
+                                    </span>
+                                ) : (
+                                    <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-600 rounded-full font-medium">
+                                        📸 Sub Club Athlete
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-black text-gray-900">
-                                {athlete.firstName} {athlete.lastName}
-                            </h2>
-                            {athlete.school && (
-                                <p className="text-gray-500">{athlete.school}</p>
-                            )}
-                            <p className="text-gray-500">{athlete.sport}</p>
-                            {/* Dynamic badge based on campaign type (not media type) */}
-                            {/* Complete Partnership = Featured Athlete (85), others = Sub Club (340) */}
-                            {athlete.campaign === 'Complete Partnership' ? (
-                                <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
-                                    🎬 Featured Athlete
-                                </span>
-                            ) : (
-                                <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-600 rounded-full font-medium">
-                                    📸 Sub Club Athlete
-                                </span>
-                            )}
-                        </div>
+
                     </div>
 
+                    {/* Media Content */}
+                    {error ? (
+                        <div className="p-6 text-center text-red-500">
+                            <p>{error}</p>
+                        </div>
+                    ) : isLoading ? (
+                        <div className="p-6">
+                            {/* Fixed-height skeleton to prevent collapse */}
+                            <div className="min-h-[300px]">
+                                <SkeletonLoader />
+                            </div>
+                            <p className="text-center text-gray-400 text-sm mt-4">Loading media...</p>
+                        </div>
+                    ) : bestMedia ? (
+                        <div className="p-6">
+                            {/* Media type label */}
+                            <div className="mb-4">
+                                <MediaTypeLabel type={bestMedia.mediaType} />
+                            </div>
+
+                            {/* Single media viewer */}
+                            <MediaView media={bestMedia} isLoading={false} />
+
+                            {/* External link (View on Instagram/TikTok) */}
+                            {externalLink && (
+                                <a
+                                    href={externalLink.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-4 flex items-center justify-center gap-2 text-subway-green hover:text-subway-green/80 font-medium transition"
+                                >
+                                    {externalLink.label} <ExternalLink className="w-4 h-4" />
+                                </a>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-6 text-center text-gray-400">
+                            <div className="w-12 h-12 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+                                <X className="w-6 h-6 opacity-50" />
+                            </div>
+                            <p>No media available for this athlete</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Media Content */}
-                {error ? (
-                    <div className="p-6 text-center text-red-500">
-                        <p>{error}</p>
-                    </div>
-                ) : isLoading ? (
-                    <div className="p-6">
-                        <SkeletonLoader />
-                        <p className="text-center text-gray-400 text-sm mt-4">Loading media...</p>
-                    </div>
-                ) : bestMedia ? (
-                    <div className="p-6">
-                        {/* Media type label */}
-                        <div className="mb-4">
-                            <MediaTypeLabel type={bestMedia.mediaType} />
-                        </div>
-
-                        {/* Single media viewer */}
-                        <MediaView media={bestMedia} isLoading={false} />
-
-                        {/* External link (View on Instagram/TikTok) */}
-                        {externalLink && (
-                            <a
-                                href={externalLink.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 flex items-center justify-center gap-2 text-subway-green hover:text-subway-green/80 font-medium transition"
-                            >
-                                {externalLink.label} <ExternalLink className="w-4 h-4" />
-                            </a>
-                        )}
-                    </div>
-                ) : (
-                    <div className="p-6 text-center text-gray-400">
-                        <div className="w-12 h-12 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
-                            <X className="w-6 h-6 opacity-50" />
-                        </div>
-                        <p>No media available for this athlete</p>
-                    </div>
+                {/* Right Arrow */}
+                {hasNext && onNavigate && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); navigateTo('next'); }}
+                        className="flex-shrink-0 bg-white/90 hover:bg-white rounded-full p-2 md:p-3 shadow-xl transition-all hover:scale-110"
+                    >
+                        <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
+                    </button>
                 )}
             </div>
         </div>
@@ -364,3 +375,4 @@ export const AthleteMediaModal: React.FC<Props> = ({ athlete, allAthletes, onClo
 };
 
 export default AthleteMediaModal;
+
